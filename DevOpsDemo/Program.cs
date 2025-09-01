@@ -5,7 +5,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+//Place to add Dependency Injection, Logger, Configurations
 var app = builder.Build();
+//Place to add Middleware.
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -23,7 +25,7 @@ var summaries = new[]
 
 app.MapGet("/weatherforecast", () =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
+    var forecast = Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
         (
             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
@@ -35,6 +37,7 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
+app.MapGet("/hello", () => "Hello World from DevOps Demo");
 
 app.Run();
 
