@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devopsdemo-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devopsdemo
+  template:
+    metadata:
+      labels:
+        app: devopsdemo
+    spec:
+      containers:
+      - name: devopsdemo
+        image: devopsdemoacr.azurecr.io/devops-demo:v1
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devopsdemo-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: devopsdemo
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
