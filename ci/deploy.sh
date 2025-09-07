@@ -43,8 +43,13 @@ FULL_IMAGE="${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}"
 echo "🐳 Building Docker image: $FULL_IMAGE"
 docker build -f "$DOCKERFILE_PATH" -t "$FULL_IMAGE" "$BUILD_CONTEXT"
 
+# az acr login --name "$ACR_NAME"
+echo "📤 Logging in to ACR with service principal..."
+echo "$AZURE_CLIENT_SECRET" | docker login "$ACR_LOGIN_SERVER" \
+  --username "$AZURE_CLIENT_ID" \
+  --password-stdin
+
 echo "📤 Pushing image: $FULL_IMAGE"
-az acr login --name "$ACR_NAME"
 docker push "$FULL_IMAGE"
 
 # ---------------------------
@@ -58,7 +63,7 @@ tmpdir="$(mktemp -d)"
 cp -r "$K8S_DIR"/. "$tmpdir"/
 
 # Replace REPLACE_IMAGE_TAG in deployment.yaml with actual IMAGE_TAG
-sed -i "s|REPLACE_IMAGE_TAG|${IMAGE_TAG}|g" "$tmpdir"/deployment.yaml
+sed -i "s|REPLACE_IMAGE_TAG|${IMAGE_TAG}|g" "$tmpdir/deployment.yaml"
 
 kubectl apply -f "$tmpdir"
 
