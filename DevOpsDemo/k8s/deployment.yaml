@@ -14,14 +14,36 @@ spec:
     spec:
       containers:
       - name: devopsdemo
-        image: devopsdemoacr.azurecr.io/devops-demo:v1
+        image: devopsdemoacr.azurecr.io/devops-demo:REPLACE_IMAGE_TAG
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /hello
+            port: 80
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /hello
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128mi"
+          limits:
+            cpu: "500m"
+            memory: "512mi"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: devopsdemo-service
+  labels:
+    app: devopsdemo
 spec:
   type: LoadBalancer
   selector:
