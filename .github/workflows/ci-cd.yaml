@@ -70,6 +70,13 @@ jobs:
         run: |
           kubectl apply -f DevOpsDemo/k8s/deployment.yaml
 
+      - name: Attach ACR to AKS
+        run: |
+          az aks update \
+            --name ${{ secrets.AKS_NAME }} \
+            --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
+            --attach-acr ${{ secrets.ACR_NAME }}
+            
       - name: Deploy to AKS
         run: |
           kubectl set image deployment/devopsdemo-deployment \
