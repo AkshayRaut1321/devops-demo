@@ -9,6 +9,7 @@ on:
     branches:
       - main
   # You can add 'workflow_dispatch:' if you want manual trigger too.
+  workflow_dispatch:
 
 jobs:
   build-test-deploy:
