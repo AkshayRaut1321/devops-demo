@@ -42,6 +42,9 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Login to ACR
+        run: az acr login --name devopsdemoacr  # replace with your secret if needed
+
       # 6. Build & Push Docker Image to ACR
       - name: Set image tag
         run: echo "IMAGE_TAG=${GITHUB_SHA}" >> $GITHUB_ENV
