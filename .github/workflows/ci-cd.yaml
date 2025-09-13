@@ -1,0 +1,74 @@
+name: CI-CD Pipeline
+
+# 1. Trigger
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  # You can add 'workflow_dispatch:' if you want manual trigger too.
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 2. Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 3. Setup .NET SDK
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'   # change if using 7.0 or other version
+
+      # 4. Run tests (restore → build → test)
+      - name: Restore dependencies
+        run: dotnet restore DevOpsDemo.sln
+
+      - name: Build
+        run: dotnet build DevOpsDemo.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test DevOpsDemo.Test/DevOpsDemo.Test.csproj --no-build --verbosity normal
+
+      # 5. Azure Login with Service Principal
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # 6. Build & Push Docker Image to ACR
+      - name: Set image tag
+        run: echo "IMAGE_TAG=${GITHUB_SHA}" >> $GITHUB_ENV
+
+      - name: Docker build & push
+        run: |
+          FULL_IMAGE=${{ secrets.ACR_LOGIN_SERVER }}/${{ secrets.IMAGE_NAME }}:${IMAGE_TAG}
+          echo "Building $FULL_IMAGE"
+          docker build -t $FULL_IMAGE .
+          echo "Pushing $FULL_IMAGE"
+          docker push $FULL_IMAGE
+          echo "FULL_IMAGE=$FULL_IMAGE" >> $GITHUB_ENV
+
+      # 7. Deploy to AKS
+      - name: Get AKS credentials
+        run: az aks get-credentials -g ${{ secrets.AKS_RG }} -n ${{ secrets.AKS_NAME }} --overwrite-existing
+
+      - name: Deploy to AKS
+        run: |
+          kubectl set image deployment/devopsdemo-deployment \
+            devopsdemo=${{ env.FULL_IMAGE }} --record
+          kubectl rollout status deployment/devopsdemo-deployment --timeout=120s
+
+      # 8. (Optional) Notifications
+      # Example: Slack notification (requires webhook secret)
+      - name: Slack Notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
