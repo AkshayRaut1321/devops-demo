@@ -49,7 +49,7 @@ jobs:
         run: |
           FULL_IMAGE=${{ secrets.ACR_LOGIN_SERVER }}/${{ secrets.IMAGE_NAME }}:${IMAGE_TAG}
           echo "Building $FULL_IMAGE"
-          docker build -t $FULL_IMAGE .
+          docker build -t $FULL_IMAGE -f DevOpsDemo/Dockerfile DevOpsDemo
           echo "Pushing $FULL_IMAGE"
           docker push $FULL_IMAGE
           echo "FULL_IMAGE=$FULL_IMAGE" >> $GITHUB_ENV
