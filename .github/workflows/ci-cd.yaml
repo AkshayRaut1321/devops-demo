@@ -33,7 +33,7 @@ jobs:
         run: dotnet build DevOpsDemo.sln --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test DevOpsDemo.Tests/DevOpsDemo.Tests.csproj --no-build --verbosity normal
+        run: dotnet test DevOpsDemo.Tests/DevOpsDemo.Tests.csproj --verbosity normal
 
       # 5. Azure Login with Service Principal
       - name: Azure Login
