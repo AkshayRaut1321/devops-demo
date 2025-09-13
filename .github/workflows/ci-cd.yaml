@@ -74,7 +74,7 @@ jobs:
         run: |
           az aks update \
             --name ${{ secrets.AKS_NAME }} \
-            --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
+            --resource-group ${{ secrets.AKS_RG }} \
             --attach-acr ${{ secrets.ACR_NAME }}
             
       - name: Deploy to AKS
