@@ -66,9 +66,9 @@ jobs:
         run: |
           sed -i "s|REPLACE_IMAGE_TAG|${IMAGE_TAG}|g" DevOpsDemo/k8s/deployment.yaml
           
-      # - name: Apply Kubernetes manifests
-      #   run: |
-      #     kubectl apply -f DevOpsDemo/k8s/deployment.yaml
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -f DevOpsDemo/k8s/deployment.yaml
 
       # - name: Attach ACR to AKS
       #   run: |
