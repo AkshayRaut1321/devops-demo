@@ -76,7 +76,16 @@ jobs:
             --name ${{ secrets.AKS_NAME }} \
             --resource-group ${{ secrets.AKS_RG }} \
             --attach-acr ${{ secrets.ACR_NAME }}
-            
+
+      - name: Create imagePullSecret in AKS
+        run: |
+          kubectl create secret docker-registry acr-auth \
+            --docker-server=${{ secrets.ACR_LOGIN_SERVER }} \
+            --docker-username=${{ secrets.ACR_PULL_USERNAME }} \
+            --docker-password=${{ secrets.ACR_PULL_PASSWORD }} \
+            --docker-email=dummy@example.com \
+            --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Deploy to AKS
         run: |
           kubectl set image deployment/devopsdemo-deployment \
