@@ -70,12 +70,12 @@ jobs:
         run: |
           kubectl apply -f DevOpsDemo/k8s/deployment.yaml
 
-      - name: Attach ACR to AKS
-        run: |
-          az aks update \
-            --name ${{ secrets.AKS_NAME }} \
-            --resource-group ${{ secrets.AKS_RG }} \
-            --attach-acr ${{ secrets.ACR_NAME }}
+      # - name: Attach ACR to AKS
+      #   run: |
+      #     az aks update \
+      #       --name ${{ secrets.AKS_NAME }} \
+      #       --resource-group ${{ secrets.AKS_RG }} \
+      #       --attach-acr ${{ secrets.ACR_NAME }}
 
       - name: Create imagePullSecret in AKS
         run: |
