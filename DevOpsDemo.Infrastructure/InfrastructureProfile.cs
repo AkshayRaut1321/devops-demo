@@ -7,7 +7,9 @@ namespace DevOpsDemo.Infrastructure
     {
         public InfrastructureProfile()
         {
-            CreateMap<ProductEntity, Product>().ReverseMap();
+            CreateMap<Product, ProductEntity>()
+                .ForMember(dest => dest.Id, opt => opt.Condition(src => !string.IsNullOrEmpty(src.Id)));
+            CreateMap<ProductEntity, Product>();
         }
     }
 }

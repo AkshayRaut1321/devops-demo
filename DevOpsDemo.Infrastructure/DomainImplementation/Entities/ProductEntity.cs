@@ -5,7 +5,8 @@ using MongoDB.Bson.Serialization.Attributes;
 public class ProductEntity
 {
     [BsonId]
-    public ObjectId Id { get; set; }
+    [BsonRepresentation(BsonType.ObjectId)] // tells Mongo to store as ObjectId but map to string
+    public string? Id { get; set; } 
 
     [BsonElement("Name")]
     public string Name { get; set; } = null!;
