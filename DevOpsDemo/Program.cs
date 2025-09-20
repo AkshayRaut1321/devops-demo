@@ -9,6 +9,7 @@ builder.Services.AddSwaggerGen();
 
 //Place to add Dependency Injection, Logger, Configurations
 builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddTransient<DatabaseSeeder>();
 
 var app = builder.Build();
 //Place to add Middleware.
@@ -19,7 +20,7 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
     await seeder.SeedAsync();
-    
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }
