@@ -27,6 +27,9 @@ public static class InfrastructureServiceExtensions
             return client.GetDatabase(settings.Database);
         });
 
+        // Repository registrations
+        services.AddScoped<IProductRepository, ProductRepository>();
+
         return services;
     }
 }

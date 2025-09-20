@@ -2,7 +2,7 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-public class Product
+public class ProductEntity
 {
     [BsonId]
     public ObjectId Id { get; set; }
