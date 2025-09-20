@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using DevOpsDemo.Infrastructure;
+using DevOpsDemo.Interfaces;
 
 namespace DevOpsDemo.Application
 {
@@ -12,8 +13,8 @@ namespace DevOpsDemo.Application
             services.AddInfrastructureServices(configuration);
 
             // Application services
-            services.AddScoped<ProductService>();
-            services.AddAutoMapper(typeof(ApplicationProfile).Assembly);
+            services.AddScoped<IProductService, ProductService>();
+            services.AddAutoMapper(cfg => { }, typeof(ApplicationProfile).Assembly);
 
             return services;
         }
