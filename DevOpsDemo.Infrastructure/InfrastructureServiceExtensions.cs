@@ -29,6 +29,7 @@ public static class InfrastructureServiceExtensions
 
         // Repository registrations
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddAutoMapper(typeof(InfrastructureProfile).Assembly);
 
         return services;
     }
