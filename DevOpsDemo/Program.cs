@@ -1,5 +1,4 @@
-using Microsoft.Extensions.Options;
-using MongoDB.Driver;
+using DevOpsDemo.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,20 +8,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 //Place to add Dependency Injection, Logger, Configurations
-//MongoDB
-var mongoDbSettingsSection = builder.Configuration.GetSection("MongoDb");
-builder.Services.Configure<MongoDbSettings>(mongoDbSettingsSection);
-builder.Services.AddSingleton<IMongoClient>(sp =>
-{
-    var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
-    return new MongoClient(settings.ConnectionString);
-});
-builder.Services.AddScoped(sp =>
-{
-    var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
-    var client = sp.GetRequiredService<IMongoClient>();
-    return client.GetDatabase(settings.Database);
-});
+builder.Services.AddApplicationServices(builder.Configuration);
 
 var app = builder.Build();
 //Place to add Middleware.
