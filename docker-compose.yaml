@@ -1,5 +1,20 @@
 version: :"3.8"
 services:
+  api:
+    build:
+      context: .
+      dockerfile: DevOpsDemo/Dockerfile
+    container_name: devops-demo-api
+    ports:
+      - "8080:80"   # host:container
+    depends_on:
+      - mongo
+      - elasticsearch
+    environment:
+      # Match how your API expects connection strings
+      - ConnectionStrings__MongoDb=mongodb://mongo:27017/mydb
+      - Elastic__Url=http://elasticsearch:9200
+
   mongo:
     image: mongo:6.0
     ports:
