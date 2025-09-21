@@ -11,9 +11,11 @@ services:
       - mongo
       - elasticsearch
     environment:
-      # Match how your API expects connection strings
-      - ConnectionStrings__MongoDb=mongodb://mongo:27017/mydb
-      - Elastic__Url=http://elasticsearch:9200
+      - DOTNET_ENVIRONMENT=Docker
+      # Optionally override app settings here:
+      # - MongoDb__ConnectionString=mongodb://mongo:27017
+      # - MongoDb__Database=productdb
+      # - Elastic__Url=http://elasticsearch:9200
 
   mongo:
     image: mongo:6.0
@@ -21,6 +23,10 @@ services:
       - "8001:27017"
     volumes:
       - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      retries: 5
   
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2

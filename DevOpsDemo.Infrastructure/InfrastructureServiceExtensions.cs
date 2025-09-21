@@ -1,5 +1,4 @@
-﻿// DevOpsDemo.Infrastructure/Extensions/InfrastructureServiceExtensions.cs
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Microsoft.Extensions.Configuration;
