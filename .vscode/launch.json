@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": ".NET 8 Launch DevOpsDemo",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build DevOpsDemo",
+            "program": "${workspaceFolder}/DevOpsDemo/bin/Debug/net8.0/DevOpsDemo.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/DevOpsDemo",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+                "uriFormat": "%s/swagger"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5015"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/DevOpsDemo/Views"
+            }
+        }
+    ]
+}
