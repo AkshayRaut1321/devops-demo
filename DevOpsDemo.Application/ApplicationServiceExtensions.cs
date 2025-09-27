@@ -7,10 +7,10 @@ namespace DevOpsDemo.Application
 {
     public static class ApplicationServiceExtensions
     {
-        public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration, bool isDevelopment)
         {
             // Call Infrastructure DI
-            services.AddInfrastructureServices(configuration);
+            services.AddInfrastructureServices(configuration, isDevelopment);
 
             // Application services
             services.AddScoped<IProductService, ProductService>();

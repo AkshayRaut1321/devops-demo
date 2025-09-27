@@ -15,7 +15,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 //Place to add Dependency Injection, Logger, Configurations
-builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddApplicationServices(builder.Configuration, builder.Environment.IsDevelopment());
 builder.Services.AddTransient<DatabaseSeeder>();
 
 var app = builder.Build();
