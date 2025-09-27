@@ -1,4 +1,4 @@
-namespace DevOpsDemo.Domain
+namespace DevOpsDemo.Domain.Models
 {
     public class Product
     {

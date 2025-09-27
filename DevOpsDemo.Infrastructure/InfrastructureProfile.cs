@@ -1,5 +1,6 @@
 using AutoMapper;
-using DevOpsDemo.Domain;
+using DevOpsDemo.Domain.Models;
+using DevOpsDemo.Infrastructure.Entities;
 
 namespace DevOpsDemo.Infrastructure
 {

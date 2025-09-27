@@ -1,6 +1,6 @@
 using AutoMapper;
-using DevOpsDemo.Domain;
 using DevOpsDemo.Application.DTOs;
+using DevOpsDemo.Domain.Models;
 
 namespace DevOpsDemo.Application
 {

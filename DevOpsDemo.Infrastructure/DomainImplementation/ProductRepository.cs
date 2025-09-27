@@ -1,132 +1,136 @@
 
 using AutoMapper;
-using DevOpsDemo.Domain;
+using DevOpsDemo.Domain.Models;
+using DevOpsDemo.Infrastructure.Entities;
 using MongoDB.Driver;
 
-public class ProductRepository : IProductRepository
+namespace DevOpsDemo.Infrastructure.DomainImplementation
 {
-    private readonly IMongoCollection<ProductEntity> _collection;
-    private readonly IMapper _mapper;
-
-    public ProductRepository(IMongoDatabase database, IMapper mapper)
+    public class ProductRepository : IProductRepository
     {
-        _collection = database.GetCollection<ProductEntity>("Products");
-        _mapper = mapper;
-        EnsureIndexes();
-    }
+        private readonly IMongoCollection<ProductEntity> _collection;
+        private readonly IMapper _mapper;
 
-    // --------------------------
-    // CRUD
-    // --------------------------
+        public ProductRepository(IMongoDatabase database, IMapper mapper)
+        {
+            _collection = database.GetCollection<ProductEntity>("Products");
+            _mapper = mapper;
+            EnsureIndexes();
+        }
 
-    public async Task<List<Product>> GetPaged(int page, int pageSize)
-    {
-        var entities = await _collection.Find(_ => true)
-                                        .Skip((page - 1) * pageSize)
-                                        .Limit(pageSize)
-                                        .ToListAsync();
-        return _mapper.Map<List<Product>>(entities);
-    }
+        // --------------------------
+        // CRUD
+        // --------------------------
 
-    public async Task<Product?> GetById(string id)
-    {
-        var entity = await _collection.Find(e => e.Id == id).FirstOrDefaultAsync();
-        return entity == null ? null : _mapper.Map<Product>(entity);
-    }
+        public async Task<List<Product>> GetPaged(int page, int pageSize)
+        {
+            var entities = await _collection.Find(_ => true)
+                                            .Skip((page - 1) * pageSize)
+                                            .Limit(pageSize)
+                                            .ToListAsync();
+            return _mapper.Map<List<Product>>(entities);
+        }
 
-    public async Task Create(Product product)
-    {
-        var entity = _mapper.Map<ProductEntity>(product);
+        public async Task<Product?> GetById(string id)
+        {
+            var entity = await _collection.Find(e => e.Id == id).FirstOrDefaultAsync();
+            return entity == null ? null : _mapper.Map<Product>(entity);
+        }
 
-        // Ensure Id is null so MongoDB generates a new ObjectId
-        entity.Id = null;
+        public async Task Create(Product product)
+        {
+            var entity = _mapper.Map<ProductEntity>(product);
 
-        await _collection.InsertOneAsync(entity);
+            // Ensure Id is null so MongoDB generates a new ObjectId
+            entity.Id = null;
 
-        // Map generated Id back to domain
-        if (entity.Id is null) // safety check
-            throw new InvalidOperationException("MongoDB failed to generate an Id.");
+            await _collection.InsertOneAsync(entity);
 
-        // Update Domain Id after insert
-        product.Id = entity.Id;
-    }
+            // Map generated Id back to domain
+            if (entity.Id is null) // safety check
+                throw new InvalidOperationException("MongoDB failed to generate an Id.");
 
-    public async Task Update(Product product)
-    {
-        var entity = _mapper.Map<ProductEntity>(product);
-        var filter = Builders<ProductEntity>.Filter.Eq(e => e.Id, entity.Id);
-        await _collection.ReplaceOneAsync(filter, entity);
-    }
+            // Update Domain Id after insert
+            product.Id = entity.Id;
+        }
 
-    public async Task Delete(string id)
-    {
-        var filter = Builders<ProductEntity>.Filter.Eq(e => e.Id, id);
-        await _collection.DeleteOneAsync(filter);
-    }
+        public async Task Update(Product product)
+        {
+            var entity = _mapper.Map<ProductEntity>(product);
+            var filter = Builders<ProductEntity>.Filter.Eq(e => e.Id, entity.Id);
+            await _collection.ReplaceOneAsync(filter, entity);
+        }
 
-    // --------------------------
-    // Search & Filter
-    // --------------------------
+        public async Task Delete(string id)
+        {
+            var filter = Builders<ProductEntity>.Filter.Eq(e => e.Id, id);
+            await _collection.DeleteOneAsync(filter);
+        }
 
-    public async Task<List<Product>> SearchByFilter(string? category, decimal? minPrice, decimal? maxPrice, string? searchText)
-    {
-        var filterBuilder = Builders<ProductEntity>.Filter;
-        var filters = new List<FilterDefinition<ProductEntity>>();
+        // --------------------------
+        // Search & Filter
+        // --------------------------
 
-        if (!string.IsNullOrEmpty(category))
-            filters.Add(filterBuilder.Eq(e => e.Category, category));
+        public async Task<List<Product>> SearchByFilter(string? category = null, decimal? minPrice = null, decimal? maxPrice = null, string? searchText = null)
+        {
+            var filterBuilder = Builders<ProductEntity>.Filter;
+            var filters = new List<FilterDefinition<ProductEntity>>();
 
-        if (minPrice.HasValue)
-            filters.Add(filterBuilder.Gte(e => e.Price, minPrice.Value));
+            if (!string.IsNullOrEmpty(category))
+                filters.Add(filterBuilder.Eq(e => e.Category, category));
 
-        if (maxPrice.HasValue)
-            filters.Add(filterBuilder.Lte(e => e.Price, maxPrice.Value));
+            if (minPrice.HasValue)
+                filters.Add(filterBuilder.Gte(e => e.Price, minPrice.Value));
 
-        if (!string.IsNullOrEmpty(searchText))
-            filters.Add(filterBuilder.Text(searchText));
+            if (maxPrice.HasValue)
+                filters.Add(filterBuilder.Lte(e => e.Price, maxPrice.Value));
 
-        var finalFilter = filters.Count > 0 ? filterBuilder.And(filters) : filterBuilder.Empty;
-        var entities = await _collection.Find(finalFilter).ToListAsync();
-        return _mapper.Map<List<Product>>(entities);
-    }
+            if (!string.IsNullOrEmpty(searchText))
+                filters.Add(filterBuilder.Text(searchText));
 
-    // --------------------------
-    // Aggregations
-    // --------------------------
+            var finalFilter = filters.Count > 0 ? filterBuilder.And(filters) : filterBuilder.Empty;
+            var entities = await _collection.Find(finalFilter).ToListAsync();
+            return _mapper.Map<List<Product>>(entities);
+        }
 
-    public async Task<Dictionary<string, object>> GetAggregations()
-    {
-        var result = new Dictionary<string, object>();
+        // --------------------------
+        // Aggregations
+        // --------------------------
 
-        // Count per category
-        var countByCategory = await _collection.Aggregate()
-                                               .Group(e => e.Category, g => new { Category = g.Key, Count = g.Count() })
-                                               .ToListAsync();
+        public async Task<Dictionary<string, object>> GetAggregations()
+        {
+            var result = new Dictionary<string, object>();
 
-        // Average price per category
-        var avgPriceByCategory = await _collection.Aggregate()
-                                                  .Group(e => e.Category, g => new { Category = g.Key, AvgPrice = g.Average(e => e.Price) })
-                                                  .ToListAsync();
+            // Count per category
+            var countByCategory = await _collection.Aggregate()
+                                                   .Group(e => e.Category, g => new { Category = g.Key, Count = g.Count() })
+                                                   .ToListAsync();
 
-        result["CountPerCategory"] = countByCategory;
-        result["AvgPricePerCategory"] = avgPriceByCategory;
+            // Average price per category
+            var avgPriceByCategory = await _collection.Aggregate()
+                                                      .Group(e => e.Category, g => new { Category = g.Key, AvgPrice = g.Average(e => e.Price) })
+                                                      .ToListAsync();
 
-        return result;
-    }
+            result["CountPerCategory"] = countByCategory;
+            result["AvgPricePerCategory"] = avgPriceByCategory;
 
-    // --------------------------
-    // Index Setup
-    // --------------------------
+            return result;
+        }
 
-    private void EnsureIndexes()
-    {
-        _collection.Indexes.CreateOne(new CreateIndexModel<ProductEntity>(
-            Builders<ProductEntity>.IndexKeys.Text(e => e.Name).Text(e => e.Description)));
+        // --------------------------
+        // Index Setup
+        // --------------------------
 
-        _collection.Indexes.CreateOne(new CreateIndexModel<ProductEntity>(
-            Builders<ProductEntity>.IndexKeys.Ascending(e => e.Category)));
+        private void EnsureIndexes()
+        {
+            _collection.Indexes.CreateOne(new CreateIndexModel<ProductEntity>(
+                Builders<ProductEntity>.IndexKeys.Text(e => e.Name).Text(e => e.Description)));
 
-        _collection.Indexes.CreateOne(new CreateIndexModel<ProductEntity>(
-            Builders<ProductEntity>.IndexKeys.Descending(e => e.CreatedAt)));
+            _collection.Indexes.CreateOne(new CreateIndexModel<ProductEntity>(
+                Builders<ProductEntity>.IndexKeys.Ascending(e => e.Category)));
+
+            _collection.Indexes.CreateOne(new CreateIndexModel<ProductEntity>(
+                Builders<ProductEntity>.IndexKeys.Descending(e => e.CreatedAt)));
+        }
     }
 }

@@ -1,4 +1,4 @@
-using DevOpsDemo.Domain;
+using DevOpsDemo.Domain.Models;
 
 public interface IProductRepository
 {
@@ -7,6 +7,6 @@ public interface IProductRepository
     Task Create(Product product);
     Task Update(Product product);
     Task Delete(string id);
-    Task<List<Product>> SearchByFilter(string? category, decimal? minPrice, decimal? maxPrice, string? searchText);
+    Task<List<Product>> SearchByFilter(string? category = null, decimal? minPrice = null, decimal? maxPrice = null, string? searchText = null);
     Task<Dictionary<string, object>> GetAggregations();
 }

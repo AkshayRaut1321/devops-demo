@@ -1,5 +1,6 @@
 
 
+using DevOpsDemo.Infrastructure.Entities;
 using MongoDB.Driver;
 
 public class DatabaseSeeder
