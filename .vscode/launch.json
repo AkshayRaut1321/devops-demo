@@ -22,6 +22,17 @@
             "sourceFileMap": {
                 "/Views": "${workspaceFolder}/DevOpsDemo/Views"
             }
+        },
+        {
+            "name": ".NET 8 Launch MongoPlayground",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build MongoPlayground",
+            "program": "${workspaceFolder}/DevOpsDemo.MongoPlayground/bin/Debug/net8.0/DevOpsDemo.MongoPlayground.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/DevOpsDemo.MongoPlayground",
+            "stopAtEntry": false,
+            "console": "integratedTerminal"
         }
     ]
 }

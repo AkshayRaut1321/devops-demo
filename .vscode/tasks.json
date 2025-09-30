@@ -17,6 +17,23 @@
                 "reveal": "always",
                 "panel": "shared"
             }
+        },
+        {
+            "label": "build MongoPlayground",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/DevOpsDemo.MongoPlayground/DevOpsDemo.MongoPlayground.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
         }
     ]
 }
