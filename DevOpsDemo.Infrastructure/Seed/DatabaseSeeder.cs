@@ -1,5 +1,3 @@
-
-
 using DevOpsDemo.Infrastructure.Entities;
 using MongoDB.Driver;
 
@@ -21,11 +19,37 @@ public class DatabaseSeeder
         if (count == 0)
         {
             var random = new Random();
+
+            // List of categories
+            var categories = new[]
+            {
+                "Electronics - Mobile Phones",
+                "Electronics - Laptops",
+                "Electronics Accessories",
+                "Home Appliances",
+                "Home Decor",
+                "Kitchen Appliances",
+                "Sports Equipment",
+                "Outdoor Sports",
+                "Fitness Equipment",
+                "Men's Fashion",
+                "Women's Fashion",
+                "Kids Fashion",
+                "Fashion Accessories",
+                "Books - Fiction",
+                "Books - Non Fiction",
+                "Books - Educational",
+                "Toys - Educational",
+                "Toys - Outdoor",
+                "Pet Supplies",
+                "Pet Food"
+            };
+
             var products = Enumerable.Range(1, 200).Select(i => new ProductEntity
             {
                 Name = $"Product {i}",
                 Description = $"Description {i}",
-                Category = i % 5 == 0 ? "Electronics" : "Books",
+                Category = categories[random.Next(categories.Length)], // Random category
                 Price = random.Next(10, 500),
                 CreatedAt = DateTime.Now
             });
