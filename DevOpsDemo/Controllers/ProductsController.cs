@@ -14,10 +14,17 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetPaged([FromQuery]int page = 1, [FromQuery]int pageSize = 20)
+    public async Task<IActionResult> GetPaged([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var products = await _service.GetPagedAsync(page, pageSize);
-        return Ok(products);
+        var result = await _service.GetPagedAsync(page, pageSize);
+        return Ok(result);
+    }
+
+    [HttpGet("GetPagedWithCount")]
+    public async Task<IActionResult> GetPagedWithCount([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var result = await _service.GetPagedWithCountAsync(page, pageSize);
+        return Ok(new { totalCount = result.Item2, data = result.Item1 });
     }
 
     [HttpGet("{id}")]
@@ -51,7 +58,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("search")]
-    public async Task<IActionResult> Search([FromQuery]string? category, [FromQuery]decimal? minPrice, [FromQuery]decimal? maxPrice, [FromQuery]string? searchText)
+    public async Task<IActionResult> Search([FromQuery] string? category, [FromQuery] decimal? minPrice, [FromQuery] decimal? maxPrice, [FromQuery] string? searchText)
     {
         var results = await _service.SearchByFilterAsync(category, minPrice, maxPrice, searchText);
         return Ok(results);

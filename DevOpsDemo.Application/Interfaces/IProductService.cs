@@ -5,6 +5,7 @@ namespace DevOpsDemo.Interfaces
     public interface IProductService
     {
         Task<List<ProductDto>> GetPagedAsync(int page, int pageSize);
+        Task<(List<ProductDto>, long)> GetPagedWithCountAsync(int page, int pageSize);
         Task<ProductDto?> GetByIdAsync(string id);
         Task<ProductDto> CreateAsync(ProductDto productDto);
         Task UpdateAsync(ProductDto productDto);

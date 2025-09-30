@@ -10,7 +10,7 @@ namespace DevOpsDemo.Infrastructure.Tests.Repositories
     {
         private readonly ProductRepository _repository;
 
-        public ProductRepositoryTests(): base("productsdb")
+        public ProductRepositoryTests() : base("productsdb")
         {
             var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
             // Create expression and add profile
@@ -88,13 +88,31 @@ namespace DevOpsDemo.Infrastructure.Tests.Repositories
                 .Select(i => new Product { Name = $"Product{i}", Category = "Electronics", Price = i })
                 .ToList();
 
-            foreach (var p in products) await _repository.Create(p);
+            foreach (var p in products)
+                await _repository.Create(p);
 
-            var page1 = await _repository.GetPaged(1, 5);
-            page1.Count.Should().Be(5);
+            var resultPage1 = await _repository.GetPaged(1, 5);
+            resultPage1.Count.Should().Be(5);
 
-            var page2 = await _repository.GetPaged(2, 5);
-            page2.Count.Should().Be(5);
+            var resultPage2 = await _repository.GetPaged(2, 5);
+            resultPage2.Count.Should().Be(5);
+        }
+
+        [Fact]
+        public async Task GetPagedWithCount_Should_Return_Correct_Number_Of_Items()
+        {
+            var products = Enumerable.Range(1, 15)
+                .Select(i => new Product { Name = $"Product{i}", Category = "Electronics", Price = i })
+                .ToList();
+
+            foreach (var p in products)
+                await _repository.Create(p);
+
+            var resultPage1 = await _repository.GetPagedWithCount(1, 5);
+            resultPage1.Item1.Count.Should().Be(5);
+
+            var resultPage2 = await _repository.GetPagedWithCount(2, 5);
+            resultPage2.Item1.Count.Should().Be(5);
         }
         #endregion
 

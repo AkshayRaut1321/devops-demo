@@ -19,7 +19,15 @@ namespace DevOpsDemo.Application
         public async Task<List<ProductDto>> GetPagedAsync(int page, int pageSize)
         {
             var products = await _repository.GetPaged(page, pageSize);
-            return _mapper.Map<List<ProductDto>>(products);
+            var productDtos = _mapper.Map<List<ProductDto>>(products);
+            return productDtos;
+        }
+
+        public async Task<(List<ProductDto>, long)> GetPagedWithCountAsync(int page, int pageSize)
+        {
+            var result = await _repository.GetPagedWithCount(page, pageSize);
+            var productDtos = _mapper.Map<List<ProductDto>>(result.Item1);
+            return (productDtos, result.Item2);
         }
 
         public async Task<ProductDto?> GetByIdAsync(string id)

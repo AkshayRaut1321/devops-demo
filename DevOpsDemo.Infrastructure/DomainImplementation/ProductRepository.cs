@@ -2,6 +2,8 @@
 using AutoMapper;
 using DevOpsDemo.Domain.Models;
 using DevOpsDemo.Infrastructure.Entities;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 
 namespace DevOpsDemo.Infrastructure.DomainImplementation
@@ -29,6 +31,37 @@ namespace DevOpsDemo.Infrastructure.DomainImplementation
                                             .Limit(pageSize)
                                             .ToListAsync();
             return _mapper.Map<List<Product>>(entities);
+        }
+
+        public async Task<(List<Product>, long)> GetPagedWithCount(int page, int pageSize)
+        {
+            var pipeline = new[]
+            {
+                // new BsonDocument("$match", filter.Render(collection.DocumentSerializer, collection.Settings.SerializerRegistry)),
+                new BsonDocument("$facet", new BsonDocument
+                {
+                    { "data", new BsonArray
+                        {
+                            new BsonDocument("$skip", (page - 1) * pageSize),
+                            new BsonDocument("$limit", pageSize)
+                        } },
+                    { "count", new BsonArray
+                        {
+                            new BsonDocument("$count", "total")
+                        } }
+                }),
+                new BsonDocument("$project", new BsonDocument
+                {
+                    { "Items", "$data" },
+                    { "TotalCount", new BsonDocument("$ifNull", new BsonArray { new BsonDocument("$arrayElemAt", new BsonArray { "$count.total", 0 }), 0 }) }
+                })
+            };
+
+            var result = await _collection.Aggregate<BsonDocument>(pipeline).FirstOrDefaultAsync();
+            var productEntities = result["Items"].AsBsonArray.Select(p => BsonSerializer.Deserialize<ProductEntity>(p.AsBsonDocument)).ToList();
+            var totalCount = result["TotalCount"].ToInt64();
+            var products = _mapper.Map<List<Product>>(productEntities);
+            return (products, totalCount);
         }
 
         public async Task<Product?> GetById(string id)
