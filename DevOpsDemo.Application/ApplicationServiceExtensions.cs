@@ -15,6 +15,7 @@ namespace DevOpsDemo.Application
             // Application services
             services.AddScoped<IProductService, ProductService>();
             services.AddAutoMapper(cfg => { }, typeof(ApplicationProfile).Assembly);
+            services.AddScoped<IProductAndDiscountService, ProductAndDiscountService>();
 
             return services;
         }
