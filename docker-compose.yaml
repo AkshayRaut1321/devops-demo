@@ -21,8 +21,11 @@ services:
     image: mongo:6.0
     ports:
       - "8001:27017"
-    volumes:
-      - mongo-data:/data/db
+    command: ["--replSet", "rs0"]   # enable single-node replica set to use Transactions
+    volumes: # to be created in Docker filesystem.
+      - replica-mongo-data:/data/db
+    # volumes: # for pointing to local database copy
+    # - "D:/Lab databases/devops-demo/mongo-data:/data/db"
     healthcheck:
       test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
       interval: 5s
@@ -43,5 +46,5 @@ services:
       - "8003:5601"
 
 volumes:
-  mongo-data:
+  replica-mongo-data:
 
