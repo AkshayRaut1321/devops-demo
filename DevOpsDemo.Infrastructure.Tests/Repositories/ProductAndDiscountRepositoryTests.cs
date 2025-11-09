@@ -19,7 +19,7 @@ namespace DevOpsDemo.Infrastructure.Tests.Repositories
             var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
             // AutoMapper setup
             var expression = new MapperConfigurationExpression();
-            expression.AddProfile(new InfrastructureProfile());
+            expression.AddProfile(new InfrastructureAutoMapperProfile());
             var config = new MapperConfiguration(expression, loggerFactory);
             var mapper = config.CreateMapper();
 
@@ -31,10 +31,11 @@ namespace DevOpsDemo.Infrastructure.Tests.Repositories
 
         private IMongoCollection<T> GetPrivateCollection<T>(string fieldName)
         {
-            return _productAndDiscountRepository.GetType()
-                .GetField(fieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.GetValue(_productAndDiscountRepository)
-                .As<IMongoCollection<T>>();
+            var type = _productAndDiscountRepository.GetType();
+            var field = type
+                .GetField(fieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var value = field?.GetValue(_productAndDiscountRepository);
+            return value.As<IMongoCollection<T>>();
         }
 
         private async Task<ProductEntity> InsertProductAsync(string name, string category, decimal price)
@@ -49,7 +50,7 @@ namespace DevOpsDemo.Infrastructure.Tests.Repositories
             return product;
         }
 
-        private async Task<DiscountEntity> InsertDiscountAsync(string? productId, decimal percent)
+        private async Task<DiscountEntity> InsertDiscountAsync(string productId, decimal percent)
         {
             var discount = new DiscountEntity
             {

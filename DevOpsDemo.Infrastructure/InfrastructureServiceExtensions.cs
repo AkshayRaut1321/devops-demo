@@ -44,8 +44,9 @@ public static class InfrastructureServiceExtensions
 
         // Repository registrations
         services.AddScoped<IProductRepository, ProductRepository>();
-        services.AddAutoMapper(cfg => { }, typeof(InfrastructureProfile).Assembly);
+        services.AddAutoMapper(cfg => { }, typeof(InfrastructureAutoMapperProfile).Assembly);
         services.AddScoped<IProductAndDiscountRepository, ProductAndDiscountRepository>();
+        services.AddScoped<ISalesRepository, SalesRepository>();
 
         return services;
     }

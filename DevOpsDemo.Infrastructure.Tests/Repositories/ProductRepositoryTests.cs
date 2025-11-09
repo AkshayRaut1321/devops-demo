@@ -15,7 +15,7 @@ namespace DevOpsDemo.Infrastructure.Tests.Repositories
             var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
             // Create expression and add profile
             var expression = new MapperConfigurationExpression();
-            expression.AddProfile(new InfrastructureProfile());
+            expression.AddProfile(new InfrastructureAutoMapperProfile());
 
             // Provide a null logger factory (or real if you want logging)
             var config = new MapperConfiguration(expression, loggerFactory: loggerFactory);

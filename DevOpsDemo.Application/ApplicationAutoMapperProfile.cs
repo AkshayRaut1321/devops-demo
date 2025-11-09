@@ -4,9 +4,9 @@ using DevOpsDemo.Domain.Models;
 
 namespace DevOpsDemo.Application
 {
-    public class ApplicationProfile : Profile
+    public class ApplicationAutoMapperProfile : Profile
     {
-        public ApplicationProfile()
+        public ApplicationAutoMapperProfile()
         {
             CreateMap<Product, ProductDto>().ReverseMap();
         }
