@@ -1,0 +1,19 @@
+version: "3.8"
+services:
+  api:
+    build:
+      context: .
+      dockerfile: DevOpsDemo/Dockerfile
+    container_name: devops-demo-api
+    ports:
+      - "8080:80"   # host:container
+    depends_on:
+      - mongo
+      - elasticsearch
+    environment:
+      - DOTNET_ENVIRONMENT=Docker
+      # Optionally override app settings here:
+      # - MongoDb__ConnectionString=mongodb://mongo:27017
+      # - MongoDb__Database=productdb
+      - Elastic__Url=http://elasticsearch:9200
+
