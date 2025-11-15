@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy all project files and solution file
-COPY *.sln ./
+COPY DevOpsDemo.sln ./
 COPY DevOpsDemo/*.csproj ./DevOpsDemo/
 COPY DevOpsDemo.Tests/*.csproj ./DevOpsDemo.Tests/
 COPY DevOpsDemo.Application/*.csproj ./DevOpsDemo.Application/

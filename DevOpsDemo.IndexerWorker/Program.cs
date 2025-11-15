@@ -8,6 +8,7 @@ using Serilog;
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddHostedService<Worker>();
 builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment.IsDevelopment());
+builder.Services.AddElasticInfrastructureServices(builder.Configuration, builder.Environment.IsDevelopment());
 
 // -------------------------------------------------------
 // Serilog (console only for now)
@@ -23,7 +24,7 @@ builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection("MongoDbIndexer"));
 
 builder.Services.Configure<ElasticSearchSettings>(
-    builder.Configuration.GetSection("ElasticSearchIndexer"));
+    builder.Configuration.GetSection("ElasticSearch"));
 
 builder.Services.Configure<WorkerSettings>(
     builder.Configuration.GetSection("WorkerIndexer"));

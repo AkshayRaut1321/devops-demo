@@ -9,8 +9,8 @@
     "ConnectionString": "mongodb://localhost:8001?directConnection=true",
     "Database": "productdb"
   },
-  "Elastic": {
-    "Url": "http://elasticsearch:9200",
+  "ElasticSearch": {
+    "NodeUrl": "http://elasticsearch:9200",
     "Index": "products_v1"
   }
 }

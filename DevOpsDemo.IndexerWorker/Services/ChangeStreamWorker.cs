@@ -19,7 +19,7 @@ public class ChangeStreamWorker : BackgroundService
 
     public ChangeStreamWorker(MongoClientFactory mongoFactory, IElasticIndexService elasticIndexService,
         IOptions<WorkerSettings> workerOptions, IOptions<MongoDbSettings> mongoOptions,
-        ILogger logger)
+        ILogger<ChangeStreamWorker> logger)
     {
         var workerSettings = workerOptions.Value;
         _settings = workerSettings;

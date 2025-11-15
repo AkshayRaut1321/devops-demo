@@ -3,7 +3,8 @@
         "ConnectionString": "mongodb://mongo:27017",
         "Database": "productdb"
     },
-    "Elastic": {
-        "Url": "http://elasticsearch:9200"
+    "ElasticSearch": {
+        "NodeUrl": "http://elasticsearch:9200",
+        "Index": "products_v1"
     }
 }

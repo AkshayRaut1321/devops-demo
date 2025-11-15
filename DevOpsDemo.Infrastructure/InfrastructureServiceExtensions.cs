@@ -64,8 +64,8 @@ public static class InfrastructureServiceExtensions
     
     public static IServiceCollection AddElasticInfrastructureServices(this IServiceCollection services, IConfiguration configuration, bool isDevelopment)
     {
-        var elasticUrl = configuration["Elastic:Url"];
-        var elasticIndex = configuration["Elastic:Index"];
+        var elasticUrl = configuration["ElasticSearch:NodeUrl"];
+        var elasticIndex = configuration["ElasticSearch:Index"];
 
         services.AddSingleton<IElasticClient>(sp =>
         {

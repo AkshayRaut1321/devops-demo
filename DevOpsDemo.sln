@@ -16,8 +16,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevOpsDemo.Tests", "DevOpsD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevOpsDemo.MongoPlayground", "DevOpsDemo.MongoPlayground\DevOpsDemo.MongoPlayground.csproj", "{02CB566E-EF70-4326-99DD-20DFE7320D95}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevOpsDemo.IndexerWorker", "DevOpsDemo.IndexerWorker\DevOpsDemo.IndexerWorker.csproj", "{724CD135-39CC-4144-AF82-64BA7B36BA6E}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,10 +50,6 @@ Global
 		{02CB566E-EF70-4326-99DD-20DFE7320D95}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02CB566E-EF70-4326-99DD-20DFE7320D95}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{02CB566E-EF70-4326-99DD-20DFE7320D95}.Release|Any CPU.Build.0 = Release|Any CPU
-		{724CD135-39CC-4144-AF82-64BA7B36BA6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{724CD135-39CC-4144-AF82-64BA7B36BA6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{724CD135-39CC-4144-AF82-64BA7B36BA6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{724CD135-39CC-4144-AF82-64BA7B36BA6E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
