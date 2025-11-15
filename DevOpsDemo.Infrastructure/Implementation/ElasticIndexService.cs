@@ -74,21 +74,6 @@ namespace DevOpsDemo.Infrastructure.Implementation
                 throw new Exception($"Failed to index document id={product.Id}: {resp.DebugInformation}");
         }
 
-        private async Task SendBulk(IEnumerable<ProductEntity> batch)
-        {
-            var resp = await _client.BulkAsync(b => b
-                .Index(_indexName)
-                .IndexMany(batch)
-            );
-
-            if (resp.Errors)
-            {
-                // collect errors for visibility
-                var itemsWithErrors = resp.ItemsWithErrors.Select(i => $"{i.Id}: {i.Error.Reason}");
-                throw new Exception("Bulk indexing reported errors: " + string.Join("; ", itemsWithErrors));
-            }
-        }
-
         public async Task<long> CountAsync()
         {
             var resp = await _client.CountAsync<ProductEntity>(c => c.Index(_indexName));
@@ -138,5 +123,19 @@ namespace DevOpsDemo.Infrastructure.Implementation
                 throw new Exception("Bulk upsert to Elasticsearch encountered errors.");
             }
         }
+        
+        public async Task DeleteAsync(string id, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                throw new ArgumentNullException(nameof(id));
+
+            var response = await _client.DeleteAsync<ProductEntity>(id, d => d.Index(_indexName), cancellationToken);
+
+            if (!response.IsValid && response.Result != Result.NotFound)
+            {
+                throw new Exception($"Failed to delete document id={id}: {response.DebugInformation}");
+            }
+        }
+
     }
 }

@@ -1,26 +1,116 @@
+using DevOpsDemo.Infrastructure.Entities;
+using DevOpsDemo.Infrastructure.Interfaces;
+using MongoDB.Driver;
+using Microsoft.Extensions.Options;
 using DevOpsDemo.IndexerWorker.Config;
 using DevOpsDemo.IndexerWorker.Infrastructure;
-using Microsoft.Extensions.Options;
+using DevOpsDemo.IndexerWorker.Entities;
+using MongoDB.Bson;
 
 namespace DevOpsDemo.IndexerWorker.Services;
 
 public class ChangeStreamWorker : BackgroundService
 {
-    private readonly ILogger<ChangeStreamWorker> _logger;
+    private readonly IMongoCollection<ProductEntity> _collection;
+    private readonly IElasticIndexService _elasticIndexService;
+    private readonly ILogger _logger;
+    private readonly WorkerSettings _settings;
+    private readonly IMongoCollection<ChangeStreamCheckpoint> _checkpointCollection;
 
-    public ChangeStreamWorker(ILogger<ChangeStreamWorker> logger, MongoClientFactory mongoFactory, ElasticClientFactory esFactory,
-        IOptions<WorkerSettings> workerSettings)
+    public ChangeStreamWorker(MongoClientFactory mongoFactory, IElasticIndexService elasticIndexService,
+        IOptions<WorkerSettings> workerOptions, IOptions<MongoDbSettings> mongoOptions,
+        ILogger logger)
     {
-        _logger = logger;
+        var workerSettings = workerOptions.Value;
+        _settings = workerSettings;
+
+        var mongoDbSettings = mongoOptions.Value;
+        _collection = mongoFactory.GetDatabase().GetCollection<ProductEntity>(mongoDbSettings.Collection);
+        _checkpointCollection = mongoFactory.GetDatabase()
+            .GetCollection<ChangeStreamCheckpoint>(workerSettings.CheckpointCollection);
+
+        _elasticIndexService = elasticIndexService ?? throw new ArgumentNullException(nameof(elasticIndexService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Indexer Worker started.");
+        _logger.LogInformation("ChangeStreamWorker started.");
 
-        while (!stoppingToken.IsCancellationRequested)
+        var pipeline = new EmptyPipelineDefinition<ChangeStreamDocument<ProductEntity>>()
+                       .Match(change => change.OperationType == ChangeStreamOperationType.Insert
+                                     || change.OperationType == ChangeStreamOperationType.Update
+                                     || change.OperationType == ChangeStreamOperationType.Replace
+                                     || change.OperationType == ChangeStreamOperationType.Delete);
+
+        var options = new ChangeStreamOptions
         {
-            await Task.Delay(1000, stoppingToken);
+            FullDocument = ChangeStreamFullDocumentOption.UpdateLookup,
+            BatchSize = _settings.BatchSize
+        };
+
+        try
+        {
+            BsonDocument? resumeToken = null;
+
+            var existingCheckpoint = await _checkpointCollection
+                .Find(c => c.Id == _collection.CollectionNamespace.CollectionName)
+                .FirstOrDefaultAsync(stoppingToken);
+
+            if (existingCheckpoint != null)
+            {
+                resumeToken = existingCheckpoint.ResumeToken;
+                _logger.LogInformation("Loaded resume token for collection {CollectionName}.", _collection.CollectionNamespace.CollectionName);
+            }
+
+            using var cursor = await _collection.WatchAsync(pipeline, options, stoppingToken)
+                                               .ConfigureAwait(false);
+
+            await cursor.ForEachAsync(async change =>
+            {
+                switch (change.OperationType)
+                {
+                    case ChangeStreamOperationType.Insert:
+                    case ChangeStreamOperationType.Replace:
+                    case ChangeStreamOperationType.Update:
+                        if (change.FullDocument != null)
+                        {
+                            try
+                            {
+                                await _elasticIndexService.BulkUpsertAsync(new[] { change.FullDocument }, cancellationToken: stoppingToken);
+                                _logger.LogInformation("Upserted document Id={Id} to Elasticsearch.", change.FullDocument.Id);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Failed to upsert document Id={Id}.", change.FullDocument.Id);
+                            }
+                        }
+                        break;
+
+                    case ChangeStreamOperationType.Delete:
+                        try
+                        {
+                            var docId = change.DocumentKey["_id"].AsString;
+                            await _elasticIndexService.DeleteAsync(docId, stoppingToken);
+                            _logger.LogInformation("Deleted document Id={Id} from Elasticsearch.", docId);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Failed to delete document Id={Id} from Elasticsearch.", change.DocumentKey["_id"]);
+                        }
+                        break;
+                }
+
+            }, stoppingToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("ChangeStreamWorker cancellation requested.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ChangeStreamWorker encountered an unhandled exception.");
+            throw;
         }
     }
 }

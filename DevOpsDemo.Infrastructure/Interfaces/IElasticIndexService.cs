@@ -8,5 +8,7 @@ namespace DevOpsDemo.Infrastructure.Interfaces
         Task IndexDocumentAsync(ProductEntity product);
         Task<long> CountAsync();
         Task BulkUpsertAsync(IEnumerable<ProductEntity> products, int batchSize = 500, CancellationToken cancellationToken = default);
+        // **Add this method for deletes**
+        Task DeleteAsync(string id, CancellationToken cancellationToken = default);
     }
 }

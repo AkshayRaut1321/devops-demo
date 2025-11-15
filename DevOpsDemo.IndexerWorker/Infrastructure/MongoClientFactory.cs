@@ -7,10 +7,10 @@ namespace DevOpsDemo.IndexerWorker.Infrastructure;
 public class MongoClientFactory
 {
     private readonly ILogger<MongoClientFactory> _logger;
-    private readonly MongoSettings _settings;
+    private readonly MongoDbSettings _settings;
     private IMongoClient? _client;
 
-    public MongoClientFactory(IOptions<MongoSettings> mongoOptions, ILogger<MongoClientFactory> logger)
+    public MongoClientFactory(IOptions<MongoDbSettings> mongoOptions, ILogger<MongoClientFactory> logger)
     {
         _logger = logger;
         _settings = mongoOptions.Value;

@@ -19,7 +19,7 @@ namespace DevOpsDemo.IndexerWorker.Services
         private readonly ElasticClientFactory _elasticFactory;
         private readonly IElasticIndexService _elasticIndexService;
         private readonly WorkerSettings _workerSettings;
-        private readonly MongoSettings _mongoSettings;
+        private readonly MongoDbSettings _mongoDbSettings;
         private readonly ILogger<FullReindexWorker> _logger;
 
         public FullReindexWorker(
@@ -27,14 +27,14 @@ namespace DevOpsDemo.IndexerWorker.Services
             ElasticClientFactory elasticFactory,
             IElasticIndexService elasticIndexService,
             IOptions<WorkerSettings> workerOptions,
-            IOptions<MongoSettings> mongoOptions,
+            IOptions<MongoDbSettings> mongoOptions,
             ILogger<FullReindexWorker> logger)
         {
             _mongoFactory = mongoFactory;
             _elasticFactory = elasticFactory;
             _elasticIndexService = elasticIndexService;
             _workerSettings = workerOptions.Value;
-            _mongoSettings = mongoOptions.Value;
+            _mongoDbSettings = mongoOptions.Value;
             _logger = logger;
         }
 
@@ -66,7 +66,7 @@ namespace DevOpsDemo.IndexerWorker.Services
         private async Task RunFullReindexAsync(CancellationToken cancellationToken)
         {
             var db = _mongoFactory.GetDatabase();
-            var collection = db.GetCollection<ProductEntity>(_mongoSettings.Collection);
+            var collection = db.GetCollection<ProductEntity>(_mongoDbSettings.Collection);
 
             // Count total documents (fast-ish; may be approximate depending on storage engine)
             var totalCount = await collection.EstimatedDocumentCountAsync(null, cancellationToken).ConfigureAwait(false);

@@ -23,11 +23,11 @@ public static class InfrastructureServiceExtensions
         services.AddSingleton<IMongoClient>(sp =>
         {
             var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
-            var mongoSettings = MongoClientSettings.FromConnectionString(settings.ConnectionString);
+            var mongoDbSettings = MongoClientSettings.FromConnectionString(settings.ConnectionString);
             // Enable logging if requested
             if (isDevelopment)
             {
-                mongoSettings.ClusterConfigurator = cb =>
+                mongoDbSettings.ClusterConfigurator = cb =>
                 {
                     cb.Subscribe<CommandStartedEvent>(e =>
                     {
@@ -36,7 +36,7 @@ public static class InfrastructureServiceExtensions
                 };
             }
             
-            return new MongoClient(mongoSettings);
+            return new MongoClient(mongoDbSettings);
         });
 
         services.AddScoped(sp =>

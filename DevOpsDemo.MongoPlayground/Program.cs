@@ -5,9 +5,9 @@ using MongoDB.Driver.Core.Events;
 
 Console.WriteLine("Hello, World!");
 
-var mongoSettings = MongoClientSettings.FromConnectionString("mongodb://localhost:8001?directConnection=true");
+var mongoDbSettings = MongoClientSettings.FromConnectionString("mongodb://localhost:8001?directConnection=true");
 
-mongoSettings.ClusterConfigurator = cb =>
+mongoDbSettings.ClusterConfigurator = cb =>
 {
     cb.Subscribe<CommandStartedEvent>(e =>
     {
@@ -15,7 +15,7 @@ mongoSettings.ClusterConfigurator = cb =>
     });
 };
 
-var client = new MongoClient(mongoSettings);
+var client = new MongoClient(mongoDbSettings);
 var db = client.GetDatabase("Playground");
 
 // Pick the demo you want to run

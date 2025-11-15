@@ -14,12 +14,12 @@ namespace DevOpsDemo.IndexerWorker.Services
     public class MongoBatchReader
     {
         private readonly MongoClientFactory _mongoFactory;
-        private readonly MongoSettings _settings;
+        private readonly MongoDbSettings _settings;
         private readonly ILogger<MongoBatchReader> _logger;
 
         public MongoBatchReader(
             MongoClientFactory mongoFactory,
-            IOptions<MongoSettings> mongoOptions,
+            IOptions<MongoDbSettings> mongoOptions,
             ILogger<MongoBatchReader> logger)
         {
             _mongoFactory = mongoFactory;
