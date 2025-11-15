@@ -1,5 +1,5 @@
 {
-    "MongoDb": {
+    "MongoDbInfra": {
         "ConnectionString": "mongodb://mongo:27017",
         "Database": "productdb"
     },

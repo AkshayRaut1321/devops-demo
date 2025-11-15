@@ -20,13 +20,13 @@ builder.Services.AddSingleton(Log.Logger = new LoggerConfiguration()
 // Load configuration
 // -------------------------------------------------------
 builder.Services.Configure<MongoDbSettings>(
-    builder.Configuration.GetSection("MongoDbSettings"));
+    builder.Configuration.GetSection("MongoDbIndexer"));
 
 builder.Services.Configure<ElasticSearchSettings>(
-    builder.Configuration.GetSection("Elasticsearch"));
+    builder.Configuration.GetSection("ElasticSearchIndexer"));
 
 builder.Services.Configure<WorkerSettings>(
-    builder.Configuration.GetSection("Worker"));
+    builder.Configuration.GetSection("WorkerIndexer"));
 
 // -------------------------------------------------------
 // Mongo client factory

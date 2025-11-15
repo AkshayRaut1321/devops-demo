@@ -11,6 +11,8 @@ namespace DevOpsDemo.Application
         {
             // Call Infrastructure DI
             services.AddInfrastructureServices(configuration, isDevelopment);
+            services.AddMongoInfrastructureServices(configuration, isDevelopment);
+            services.AddElasticInfrastructureServices(configuration, isDevelopment);
 
             // Application services
             services.AddScoped<IProductService, ProductService>();

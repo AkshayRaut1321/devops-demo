@@ -16,8 +16,21 @@ public static class InfrastructureServiceExtensions
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration, bool isDevelopment)
     {
+        services.AddScoped<IElasticIndexService, ElasticIndexService>();
+
+        // Repository registrations
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddAutoMapper(cfg => { }, typeof(InfrastructureAutoMapperProfile).Assembly);
+        services.AddScoped<IProductAndDiscountRepository, ProductAndDiscountRepository>();
+        services.AddScoped<ISalesRepository, SalesRepository>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddMongoInfrastructureServices(this IServiceCollection services, IConfiguration configuration, bool isDevelopment)
+    {
         // MongoDB settings
-        var mongoDbSettingsSection = configuration.GetSection("MongoDb");
+        var mongoDbSettingsSection = configuration.GetSection("MongoDbInfra");
         services.Configure<MongoDbSettings>(mongoDbSettingsSection);
 
         services.AddSingleton<IMongoClient>(sp =>
@@ -35,7 +48,7 @@ public static class InfrastructureServiceExtensions
                     });
                 };
             }
-            
+
             return new MongoClient(mongoDbSettings);
         });
 
@@ -46,6 +59,11 @@ public static class InfrastructureServiceExtensions
             return client.GetDatabase(settings.Database);
         });
 
+        return services;
+    }
+    
+    public static IServiceCollection AddElasticInfrastructureServices(this IServiceCollection services, IConfiguration configuration, bool isDevelopment)
+    {
         var elasticUrl = configuration["Elastic:Url"];
         var elasticIndex = configuration["Elastic:Index"];
 
@@ -72,13 +90,6 @@ public static class InfrastructureServiceExtensions
             
             return new ElasticClient(settings);
         });
-        services.AddScoped<IElasticIndexService, ElasticIndexService>();
-
-        // Repository registrations
-        services.AddScoped<IProductRepository, ProductRepository>();
-        services.AddAutoMapper(cfg => { }, typeof(InfrastructureAutoMapperProfile).Assembly);
-        services.AddScoped<IProductAndDiscountRepository, ProductAndDiscountRepository>();
-        services.AddScoped<ISalesRepository, SalesRepository>();
 
         return services;
     }

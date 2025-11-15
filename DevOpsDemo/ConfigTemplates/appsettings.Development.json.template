@@ -5,7 +5,7 @@
       "Microsoft.AspNetCore": "Warning"
     }
   },
-  "MongoDb": {
+  "MongoDbInfra": {
     "ConnectionString": "mongodb://localhost:8001?directConnection=true",
     "Database": "productdb"
   },
