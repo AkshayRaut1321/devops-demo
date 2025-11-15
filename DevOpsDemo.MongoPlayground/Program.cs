@@ -5,7 +5,7 @@ using MongoDB.Driver.Core.Events;
 
 Console.WriteLine("Hello, World!");
 
-var mongoSettings = MongoClientSettings.FromConnectionString("mongodb://localhost:8001");
+var mongoSettings = MongoClientSettings.FromConnectionString("mongodb://localhost:8001?directConnection=true");
 
 mongoSettings.ClusterConfigurator = cb =>
 {

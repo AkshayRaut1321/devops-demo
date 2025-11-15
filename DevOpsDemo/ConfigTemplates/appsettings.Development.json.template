@@ -6,7 +6,7 @@
     }
   },
   "MongoDb": {
-    "ConnectionString": "mongodb://localhost:8001",
+    "ConnectionString": "mongodb://localhost:8001?directConnection=true",
     "Database": "productdb"
   },
   "Elastic": {

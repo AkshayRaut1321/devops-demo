@@ -2,13 +2,13 @@ using DevOpsDemo.IndexerWorker.Config;
 using DevOpsDemo.IndexerWorker.Infrastructure;
 using Microsoft.Extensions.Options;
 
-namespace DevOpsDemo.IndexerWorker;
+namespace DevOpsDemo.IndexerWorker.Services;
 
-public class Worker : BackgroundService
+public class ChangeStreamWorker : BackgroundService
 {
-    private readonly ILogger<Worker> _logger;
+    private readonly ILogger<ChangeStreamWorker> _logger;
 
-    public Worker(ILogger<Worker> logger, MongoClientFactory mongoFactory, ElasticClientFactory esFactory,
+    public ChangeStreamWorker(ILogger<ChangeStreamWorker> logger, MongoClientFactory mongoFactory, ElasticClientFactory esFactory,
         IOptions<WorkerSettings> workerSettings)
     {
         _logger = logger;
@@ -16,12 +16,10 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        _logger.LogInformation("Indexer Worker started.");
+
         while (!stoppingToken.IsCancellationRequested)
         {
-            if (_logger.IsEnabled(LogLevel.Information))
-            {
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-            }
             await Task.Delay(1000, stoppingToken);
         }
     }
