@@ -56,7 +56,15 @@ public static class InfrastructureServiceExtensions
                 .DefaultIndex(elasticIndex)
                 // Map ProductEntity.Id as document Id for NEST;
                 .DefaultMappingFor<ProductEntity>(m => m.IdProperty(p => p.Id)
-                .PropertyName(p => p.Name, "name"));
+                .PropertyName(p => p.Name, "name"))
+                // Required additions for ES 8.x stability:
+                .DisableDirectStreaming()                      // helpful debugging
+                .RequestTimeout(TimeSpan.FromSeconds(60))      // ES operations can be slow at startup
+                .PingTimeout(TimeSpan.FromSeconds(30))         // avoid premature ping failures
+                .SniffOnStartup(false)                         // disable sniffing (not needed for single-node)
+                .SniffOnConnectionFault(false)
+                .EnableApiVersioningHeader()                   // recommended for ES 8+
+                .ServerCertificateValidationCallback((o, cert, chain, errors) => true); // allow self-signed certs
                 
             #if DEBUG
                 settings.DisableDirectStreaming();

@@ -8,8 +8,10 @@ services:
     ports:
       - "8080:80"   # host:container
     depends_on:
-      - mongo
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+      mongo:
+        condition: service_started
     environment:
       - DOTNET_ENVIRONMENT=Docker
       # Optionally override app settings here:
