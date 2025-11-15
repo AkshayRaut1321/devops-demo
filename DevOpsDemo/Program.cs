@@ -1,4 +1,5 @@
 using DevOpsDemo.Application;
+using DevOpsDemo.Infrastructure.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +28,9 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docke
     using var scope = app.Services.CreateScope();
     var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
     await seeder.SeedAsync();
+
+    var elasticIndexService = scope.ServiceProvider.GetRequiredService<IElasticIndexService>();
+    await seeder.SeedElasticAsync(elasticIndexService);
 
     app.UseSwagger();
     app.UseSwaggerUI();

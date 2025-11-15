@@ -5,6 +5,10 @@ using Microsoft.Extensions.Configuration;
 using DevOpsDemo.Infrastructure.DomainImplementation;
 using MongoDB.Bson;
 using MongoDB.Driver.Core.Events;
+using Nest;
+using DevOpsDemo.Infrastructure.Entities;
+using DevOpsDemo.Infrastructure.Interfaces;
+using DevOpsDemo.Infrastructure.Implementation;
 
 namespace DevOpsDemo.Infrastructure;
 
@@ -41,6 +45,26 @@ public static class InfrastructureServiceExtensions
             var client = sp.GetRequiredService<IMongoClient>();
             return client.GetDatabase(settings.Database);
         });
+
+        var elasticUrl = configuration["Elastic:Url"];
+        var elasticIndex = configuration["Elastic:Index"];
+
+        services.AddSingleton<IElasticClient>(sp =>
+        {
+            var uri = new Uri(elasticUrl);
+            var settings = new ConnectionSettings(uri)
+                .DefaultIndex(elasticIndex)
+                // Map ProductEntity.Id as document Id for NEST;
+                .DefaultMappingFor<ProductEntity>(m => m.IdProperty(p => p.Id)
+                .PropertyName(p => p.Name, "name"));
+                
+            #if DEBUG
+                settings.DisableDirectStreaming();
+            #endif
+            
+            return new ElasticClient(settings);
+        });
+        services.AddScoped<IElasticIndexService, ElasticIndexService>();
 
         // Repository registrations
         services.AddScoped<IProductRepository, ProductRepository>();

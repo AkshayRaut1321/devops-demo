@@ -1,4 +1,5 @@
 using DevOpsDemo.Infrastructure.Entities;
+using DevOpsDemo.Infrastructure.Interfaces;
 using MongoDB.Driver;
 
 public class DatabaseSeeder
@@ -87,5 +88,16 @@ public class DatabaseSeeder
 
             await salesCollection.InsertManyAsync(sales);
         }
+    }
+
+    public async Task SeedElasticAsync(IElasticIndexService elasticIndexService)
+    {
+        var productCollection = _mongoDatabase.GetCollection<ProductEntity>("Products");
+        
+        await elasticIndexService.EnsureIndexAsync();
+
+        //read all products from MongoDB (project to ProductEntity) - implement paging if large.
+        var products = await productCollection.Find(FilterDefinition<ProductEntity>.Empty).ToListAsync();
+        await elasticIndexService.BulkIndexAsync(products, batchSize: 200);
     }
 }
