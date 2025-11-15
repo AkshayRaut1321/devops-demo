@@ -49,25 +49,25 @@ public class ChangeStreamWorker : BackgroundService
             BatchSize = _settings.BatchSize
         };
 
+        // Use resume token if available
+        var existingCheckpoint = await _checkpointCollection
+            .Find(c => c.Id == _collection.CollectionNamespace.CollectionName)
+            .FirstOrDefaultAsync(stoppingToken);
+
+        if (existingCheckpoint != null)
+        {
+            options.ResumeAfter = existingCheckpoint.ResumeToken;
+            _logger.LogInformation("Resuming ChangeStream from saved resume token.");
+        }
+
         try
         {
-            BsonDocument? resumeToken = null;
-
-            var existingCheckpoint = await _checkpointCollection
-                .Find(c => c.Id == _collection.CollectionNamespace.CollectionName)
-                .FirstOrDefaultAsync(stoppingToken);
-
-            if (existingCheckpoint != null)
-            {
-                resumeToken = existingCheckpoint.ResumeToken;
-                _logger.LogInformation("Loaded resume token for collection {CollectionName}.", _collection.CollectionNamespace.CollectionName);
-            }
-
             using var cursor = await _collection.WatchAsync(pipeline, options, stoppingToken)
                                                .ConfigureAwait(false);
 
             await cursor.ForEachAsync(async change =>
             {
+                // Process document
                 switch (change.OperationType)
                 {
                     case ChangeStreamOperationType.Insert:
@@ -77,7 +77,10 @@ public class ChangeStreamWorker : BackgroundService
                         {
                             try
                             {
-                                await _elasticIndexService.BulkUpsertAsync(new[] { change.FullDocument }, cancellationToken: stoppingToken);
+                                await _elasticIndexService.BulkUpsertAsync(
+                                    new[] { change.FullDocument },
+                                    cancellationToken: stoppingToken);
+
                                 _logger.LogInformation("Upserted document Id={Id} to Elasticsearch.", change.FullDocument.Id);
                             }
                             catch (Exception ex)
@@ -101,6 +104,21 @@ public class ChangeStreamWorker : BackgroundService
                         break;
                 }
 
+                // --- Save resume token after processing ---
+                if (change.ResumeToken != null)
+                {
+                    var filter = Builders<ChangeStreamCheckpoint>.Filter.Eq(c => c.Id, _collection.CollectionNamespace.CollectionName);
+                    var update = Builders<ChangeStreamCheckpoint>.Update
+                        .Set(c => c.ResumeToken, change.ResumeToken)
+                        .Set(c => c.UpdatedAt, DateTime.UtcNow);
+
+                    await _checkpointCollection.UpdateOneAsync(
+                        filter,
+                        update,
+                        new UpdateOptions { IsUpsert = true },
+                        stoppingToken);
+                }
+
             }, stoppingToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
@@ -113,4 +131,5 @@ public class ChangeStreamWorker : BackgroundService
             throw;
         }
     }
+
 }
