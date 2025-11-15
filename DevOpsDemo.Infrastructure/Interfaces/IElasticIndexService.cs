@@ -6,7 +6,7 @@ namespace DevOpsDemo.Infrastructure.Interfaces
     {
         Task EnsureIndexAsync();
         Task IndexDocumentAsync(ProductEntity product);
-        Task BulkIndexAsync(IEnumerable<ProductEntity> products, int batchSize = 100);
         Task<long> CountAsync();
+        Task BulkUpsertAsync(IEnumerable<ProductEntity> products, int batchSize = 500, CancellationToken cancellationToken = default);
     }
 }

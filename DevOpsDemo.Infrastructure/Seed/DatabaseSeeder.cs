@@ -98,6 +98,6 @@ public class DatabaseSeeder
 
         //read all products from MongoDB (project to ProductEntity) - implement paging if large.
         var products = await productCollection.Find(FilterDefinition<ProductEntity>.Empty).ToListAsync();
-        await elasticIndexService.BulkIndexAsync(products, batchSize: 200);
+        await elasticIndexService.BulkUpsertAsync(products, batchSize: 200);
     }
 }

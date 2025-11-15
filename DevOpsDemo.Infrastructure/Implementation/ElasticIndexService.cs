@@ -74,23 +74,6 @@ namespace DevOpsDemo.Infrastructure.Implementation
                 throw new Exception($"Failed to index document id={product.Id}: {resp.DebugInformation}");
         }
 
-        public async Task BulkIndexAsync(IEnumerable<ProductEntity> products, int batchSize = 100)
-        {
-            var batch = new List<ProductEntity>(batchSize);
-            foreach (var p in products)
-            {
-                batch.Add(p);
-                if (batch.Count >= batchSize)
-                {
-                    await SendBulk(batch);
-                    batch.Clear();
-                }
-            }
-
-            if (batch.Count > 0)
-                await SendBulk(batch);
-        }
-
         private async Task SendBulk(IEnumerable<ProductEntity> batch)
         {
             var resp = await _client.BulkAsync(b => b
@@ -110,6 +93,50 @@ namespace DevOpsDemo.Infrastructure.Implementation
         {
             var resp = await _client.CountAsync<ProductEntity>(c => c.Index(_indexName));
             return resp.Count;
+        }
+
+        public async Task BulkUpsertAsync(IEnumerable<ProductEntity> products, int batchSize = 500, CancellationToken cancellationToken = default)
+        {
+            if (products == null) throw new ArgumentNullException(nameof(products));
+
+            var batch = new List<ProductEntity>(batchSize);
+
+            foreach (var product in products)
+            {
+                batch.Add(product);
+
+                if (batch.Count >= batchSize)
+                {
+                    await SendBulk(batch, cancellationToken);
+                    batch.Clear();
+                }
+            }
+
+            // send remaining documents
+            if (batch.Count > 0)
+                await SendBulk(batch, cancellationToken);
+        }
+
+        private async Task SendBulk(IEnumerable<ProductEntity> batch, CancellationToken cancellationToken)
+        {
+            if (!batch.Any()) return;
+
+            var response = await _client.BulkAsync(b => b
+                .Index(_indexName)
+                .IndexMany(batch, (bi, doc) => bi.Id(doc.Id)), // ensures idempotency
+                cancellationToken
+            ).ConfigureAwait(false);
+
+            if (response.Errors)
+            {
+                // log individual failures
+                var itemsWithErrors = response.ItemsWithErrors
+                                              .Select(i => $"Id: {i.Id}, Reason: {i.Error?.Reason}");
+                // replace Console.WriteLine with Serilog in your worker if desired
+                Console.WriteLine($"Bulk upsert errors: {string.Join("; ", itemsWithErrors)}");
+
+                throw new Exception("Bulk upsert to Elasticsearch encountered errors.");
+            }
         }
     }
 }

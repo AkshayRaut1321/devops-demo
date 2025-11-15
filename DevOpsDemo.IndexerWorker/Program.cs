@@ -2,10 +2,12 @@ using DevOpsDemo.IndexerWorker;
 using DevOpsDemo.IndexerWorker.Config;
 using DevOpsDemo.IndexerWorker.Infrastructure;
 using DevOpsDemo.IndexerWorker.Services;
+using DevOpsDemo.Infrastructure;
 using Serilog;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddHostedService<Worker>();
+builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment.IsDevelopment());
 
 // -------------------------------------------------------
 // Serilog (console only for now)
@@ -36,6 +38,7 @@ builder.Services.AddSingleton<ElasticClientFactory>();
 // Worker - Change Streams listener (we implement this later)
 // -------------------------------------------------------
 builder.Services.AddHostedService<ChangeStreamWorker>();
+builder.Services.AddHostedService<FullReindexWorker>();
 
 var host = builder.Build();
 host.Run();

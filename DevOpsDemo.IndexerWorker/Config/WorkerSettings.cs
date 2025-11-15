@@ -9,4 +9,7 @@ public class WorkerSettings
     public int FullReindexIntervalMinutes { get; set; } = 1440;
     public bool ChangeStreamEnabled { get; set; } = true;
     public int ChangeStreamRetrySeconds { get; set; } = 10;
+    public int RetryDelaySeconds { get; set; } = 5;
+    public bool EnableChangeStream { get; set; } = true;
+    public bool EnableFullResyncOnStart { get; set; } = false;
 }
