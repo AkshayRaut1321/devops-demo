@@ -6,6 +6,10 @@ public sealed class ProductSearchResponse
     public long Total { get; init; }
     public int Page { get; init; }
     public int PageSize { get; init; }
+
+    //Aggregations / Facets
+    public IReadOnlyList<FacetBucket> CategoryFacets { get; init; } = [];
+    public IReadOnlyList<FacetBucket> PriceFacets { get; init; } = [];
 }
 
 public sealed class ProductSearchItem
@@ -15,4 +19,10 @@ public sealed class ProductSearchItem
     public string Category { get; init; } = default!;
     public decimal Price { get; init; }
     public string? Highlight { get; init; }
+}
+
+public sealed class FacetBucket
+{
+    public string Key { get; init; } = default!;
+    public long Count { get; init; }
 }

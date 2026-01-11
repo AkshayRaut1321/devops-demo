@@ -27,6 +27,23 @@ public sealed class ProductSearchService : IProductSearchService
             .Size(pageSize)
             .Query(q => BuildQuery(q, request))
             .Sort(so => BuildSort(so, request))
+            .Aggregations(aggs => aggs
+                // CATEGORY FACET
+                .Terms("category_facet", t => t
+                    .Field(p => p.Category)
+                    .Size(20)
+                )
+                // PRICE FACET (RANGES)
+                .Range("price_facet", r => r
+                    .Field(p => p.Price)
+                    .Ranges(
+                        rr => rr.To(100),
+                        rr => rr.From(100).To(500),
+                        rr => rr.From(500).To(1000),
+                        rr => rr.From(1000)
+                    )
+                )
+            )
             .Highlight(h => h
                 .PreTags("<em>")
                 .PostTags("</em>")
@@ -40,6 +57,9 @@ public sealed class ProductSearchService : IProductSearchService
         if (!response.IsValid)
             throw new Exception(response.DebugInformation);
 
+        var categoryAgg = response.Aggregations.Terms("category_facet");
+        var priceAgg = response.Aggregations.Range("price_facet");
+
         return new ProductSearchResponse
         {
             Page = page,
@@ -52,7 +72,19 @@ public sealed class ProductSearchService : IProductSearchService
                 Category = hit.Source.Category,
                 Price = hit.Source.Price,
                 Highlight = hit.Highlight?.Values.SelectMany(v => v).FirstOrDefault()
-            }).ToList()
+            }).ToList(),
+            CategoryFacets = categoryAgg?.Buckets
+                .Select(b => new FacetBucket
+                {
+                    Key = b.Key,
+                    Count = b.DocCount ?? 0
+                }).ToList() ?? [],
+            PriceFacets = priceAgg?.Buckets
+                .Select(b => new FacetBucket
+                {
+                    Key = $"{b.From ?? 0}-{b.To ?? double.MaxValue}",
+                    Count = b.DocCount
+                }).ToList() ?? []
         };
     }
 
