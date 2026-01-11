@@ -6,7 +6,6 @@ using DevOpsDemo.Infrastructure;
 using Serilog;
 
 var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddHostedService<Worker>();
 builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment.IsDevelopment());
 builder.Services.AddElasticInfrastructureServices(builder.Configuration, builder.Environment.IsDevelopment());
 
