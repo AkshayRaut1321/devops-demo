@@ -1,4 +1,5 @@
 using DevOpsDemo.Application.DTOs;
+using DevOpsDemo.Application.Search;
 using DevOpsDemo.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,11 +9,14 @@ public class ProductsController : ControllerBase
 {
     private readonly IProductService _productService;
     private readonly IProductAndDiscountService _productAndDiscountService;
+    private readonly IProductSearchService _searchService;
 
-    public ProductsController(IProductService productService, IProductAndDiscountService productAndDiscountService)
+    public ProductsController(IProductService productService, IProductAndDiscountService productAndDiscountService,
+    IProductSearchService searchService)
     {
         _productService = productService;
         _productAndDiscountService = productAndDiscountService;
+        _searchService = searchService;
     }
 
     [HttpGet]
@@ -79,4 +83,12 @@ public class ProductsController : ControllerBase
         var result = await _productAndDiscountService.GetPagedAsync(page, pageSize);
         return Ok(result);
     }
+
+    [HttpGet("elasticsearch")]
+    public async Task<IActionResult> Search([FromQuery] ProductSearchRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _searchService.SearchAsync(request, cancellationToken);
+        return Ok(result);
+    }
+
 }

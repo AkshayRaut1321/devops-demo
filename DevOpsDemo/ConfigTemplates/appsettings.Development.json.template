@@ -10,7 +10,7 @@
     "Database": "productdb"
   },
   "ElasticSearch": {
-    "NodeUrl": "http://elasticsearch:9200",
+    "NodeUrl": "http://localhost:8002",
     "Index": "products_v1"
   }
 }

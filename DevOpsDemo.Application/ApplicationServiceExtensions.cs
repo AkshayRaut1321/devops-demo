@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using DevOpsDemo.Infrastructure;
 using DevOpsDemo.Interfaces;
+using DevOpsDemo.Application.Search;
 
 namespace DevOpsDemo.Application
 {
@@ -19,6 +20,7 @@ namespace DevOpsDemo.Application
             services.AddAutoMapper(cfg => { }, typeof(ApplicationAutoMapperProfile).Assembly);
             services.AddScoped<IProductAndDiscountService, ProductAndDiscountService>();
             services.AddScoped<ISalesService, SalesService>();
+            services.AddScoped<IProductSearchService, ProductSearchService>();
 
             return services;
         }
