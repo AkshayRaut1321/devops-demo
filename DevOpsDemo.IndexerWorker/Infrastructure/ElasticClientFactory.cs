@@ -29,10 +29,10 @@ namespace DevOpsDemo.IndexerWorker.Infrastructure
                 .ThrowExceptions()  // Better debugging
                 .DisableDirectStreaming(); // Helps logging request/response JSON
 
-            // if (!string.IsNullOrWhiteSpace(_settings.Username))
-            // {
-            //     settings.BasicAuthentication(_settings.Username, _settings.Password);
-            // }
+            if (!string.IsNullOrWhiteSpace(_settings.Username))
+            {
+                settings.BasicAuthentication(_settings.Username, _settings.Password);
+            }
 
             return new ElasticClient(settings);
         }
