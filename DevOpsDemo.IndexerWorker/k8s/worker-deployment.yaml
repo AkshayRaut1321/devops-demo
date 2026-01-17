@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: indexer-worker
+  namespace: project-b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: indexer-worker
+  template:
+    metadata:
+      labels:
+        app: indexer-worker
+    spec:
+      containers:
+        - name: indexer-worker
+          image: devopsdemoakshayacr.azurecr.io/devops-demo-indexer:REPLACE_IMAGE_TAG
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MONGO_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: project-b-secrets
+                  key: MONGO_CONNECTION_STRING
+
+            - name: ELASTICSEARCH_URL
+              valueFrom:
+                secretKeyRef:
+                  name: project-b-secrets
+                  key: ELASTICSEARCH_URL
+
+            - name: ELASTICSEARCH_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: project-b-secrets
+                  key: ELASTICSEARCH_USERNAME
+
+            - name: ELASTICSEARCH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: project-b-secrets
+                  key: ELASTICSEARCH_PASSWORD
+
+            - name: ELASTICSEARCH_INDEX_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: project-b-config
+                  key: ELASTICSEARCH_INDEX_NAME
+
+            - name: ELASTICSEARCH_ENABLE_CHANGE_STREAMS
+              valueFrom:
+                configMapKeyRef:
+                  name: project-b-config
+                  key: ELASTICSEARCH_ENABLE_CHANGE_STREAMS
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

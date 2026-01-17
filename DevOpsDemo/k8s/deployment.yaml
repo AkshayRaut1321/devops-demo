@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: devopsdemo
-        image: devopsdemoacr.azurecr.io/devops-demo:REPLACE_IMAGE_TAG
+        image: devopsdemoakshayacr.azurecr.io/devops-demo:REPLACE_IMAGE_TAG
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
