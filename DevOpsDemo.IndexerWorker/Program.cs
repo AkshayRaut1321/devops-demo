@@ -20,9 +20,10 @@ builder.Services.AddElasticInfrastructureServices(builder.Environment.IsDevelopm
 // -------------------------------------------------------
 // Serilog (console only for now)
 // -------------------------------------------------------
-builder.Services.AddSingleton(Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .CreateLogger());
+//Removing it temporarily due to conflicts with ILogger implementation as I cannot see logs of ElasticBootstrapService as per ChatGPT suggestion
+// builder.Services.AddSingleton(Log.Logger = new LoggerConfiguration()
+//     .WriteTo.Console()
+//     .CreateLogger());
 
 // -------------------------------------------------------
 // Load configuration

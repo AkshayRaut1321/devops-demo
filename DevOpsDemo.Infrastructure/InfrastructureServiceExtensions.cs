@@ -66,7 +66,6 @@ public static class InfrastructureServiceExtensions
 
             var uri = new Uri(elasticSettings.NodeUrl);
             var elasticConnectionSettings = new ConnectionSettings(uri)
-                .DefaultIndex(elasticSettings.IndexName)
                 // Map ProductEntity.Id as document Id for NEST;
                 .DefaultMappingFor<ProductEntity>(m => m.IdProperty(p => p.Id)
                 .PropertyName(p => p.Name, "name"))
