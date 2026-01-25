@@ -7,7 +7,7 @@
   "ElasticSearchIndexer": {
     "NodeUrl": "http://localhost:8002",
     "IndexName": "products",
-    "Alias": "products_current"
+    "IndexAlias": "products_current"
   },
   "WorkerIndexer": {
     "RetryDelaySeconds": 5,

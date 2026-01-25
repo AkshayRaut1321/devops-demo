@@ -13,6 +13,6 @@
   "ElasticSearchWebApi": {
     "NodeUrl": "http://localhost:8002",
     "IndexName": "products_v1",
-    "Alias": "products_current"
+    "IndexAlias": "products_current"
   }
 }
