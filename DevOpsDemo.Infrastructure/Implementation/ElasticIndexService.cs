@@ -1,5 +1,6 @@
 using DevOpsDemo.Infrastructure.Entities;
 using DevOpsDemo.Infrastructure.Interfaces;
+using Microsoft.Extensions.Logging;
 using Nest;
 
 namespace DevOpsDemo.Infrastructure.Implementation
@@ -9,10 +10,12 @@ namespace DevOpsDemo.Infrastructure.Implementation
         private readonly IElasticClient _client;
         private const string _indexVersion = "products_v1";
         private const string _indexAlias = "products_current";
+        private readonly ILogger _logger;
 
-        public ElasticIndexService(IElasticClient client)
+        public ElasticIndexService(IElasticClient client, ILogger<ElasticIndexService> logger)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task EnsureIndexAsync()
@@ -167,8 +170,12 @@ namespace DevOpsDemo.Infrastructure.Implementation
 
             var response = await _client.DeleteAsync<ProductEntity>(id, d => d.Index(_indexAlias), cancellationToken);
 
-            if (!response.IsValid && response.Result != Result.NotFound)
+            _logger.LogInformation("ES delete response for Id={Id}. Found={Found}, Result={Result}, Valid={Valid}",
+            id, response.Result, response.ApiCall?.HttpStatusCode, response.IsValid);
+
+            if (!response.IsValid)
             {
+                _logger.LogError(response.OriginalException, "ES delete failed for Id={Id}", id);
                 throw new Exception($"Failed to delete document id={id}: {response.DebugInformation}");
             }
         }

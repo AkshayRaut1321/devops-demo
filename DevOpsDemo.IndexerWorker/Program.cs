@@ -33,7 +33,10 @@ builder.Services.Configure<WorkerSettings>(
 // -------------------------------------------------------
 builder.Services.AddSingleton<MongoClientFactory>();
 builder.Services.AddSingleton<ElasticClientFactory>();
-
+// -------------------------------------------------------
+// bootstrap hosted service
+// -------------------------------------------------------
+builder.Services.AddHostedService<ElasticBootstrapService>();
 // -------------------------------------------------------
 // Worker - Change Streams listener (we implement this later)
 // -------------------------------------------------------

@@ -93,7 +93,23 @@ public class ChangeStreamWorker : BackgroundService
                     case ChangeStreamOperationType.Delete:
                         try
                         {
-                            var docId = change.DocumentKey["_id"].AsString;
+                            var idValue = change.DocumentKey["_id"];
+                            if (idValue is null || idValue.IsBsonNull)
+                            {
+                                _logger.LogWarning("Delete event received without _id.");
+                                return;
+                            }
+                            string? docId = idValue.BsonType switch
+                            {
+                                BsonType.ObjectId => idValue.AsObjectId.ToString(),
+                                BsonType.String => idValue.AsString,
+                                _ => idValue.ToString()
+                            };
+                            if (string.IsNullOrWhiteSpace(docId))
+                            {
+                                _logger.LogWarning("Unable to resolve document id from BsonValue.");
+                                return;
+                            }
                             await _elasticIndexService.DeleteAsync(docId, stoppingToken);
                             _logger.LogInformation("Deleted document Id={Id} from Elasticsearch.", docId);
                         }
