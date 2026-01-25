@@ -26,6 +26,12 @@ public class ChangeStreamWorker : BackgroundService
         _settings = workerSettings;
 
         var mongoDbSettings = mongoOptions.Value;
+        if (string.IsNullOrWhiteSpace(mongoDbSettings.CollectionName))
+        {
+            throw new InvalidOperationException(
+                "MongoDbSettings.CollectionName is not configured for IndexerWorker");
+        }
+
         _collection = mongoFactory.GetDatabase().GetCollection<ProductEntity>(mongoDbSettings.CollectionName);
         _checkpointCollection = mongoFactory.GetDatabase()
             .GetCollection<ChangeStreamCheckpoint>(workerSettings.CheckpointCollection);
