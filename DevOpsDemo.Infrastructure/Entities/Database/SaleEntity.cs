@@ -1,7 +1,7 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace DevOpsDemo.Infrastructure.Entities
+namespace DevOpsDemo.Infrastructure.Entities.Database
 {
     public class SaleEntity
     {

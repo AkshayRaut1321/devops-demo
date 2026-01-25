@@ -1,18 +1,22 @@
-using DevOpsDemo.Infrastructure.Entities;
+using DevOpsDemo.Infrastructure.Entities.Config;
+using DevOpsDemo.Infrastructure.Entities.Database;
+using Microsoft.Extensions.Options;
 using Nest;
 
 namespace DevOpsDemo.Application.Search;
 
 public sealed class ProductSearchService : IProductSearchService
 {
-    private const string IndexAlias = "products_current";
+    private readonly string IndexAlias = "products_current";
     private const int MaxPageSize = 100;
 
     private readonly IElasticClient _client;
 
-    public ProductSearchService(IElasticClient client)
+    public ProductSearchService(IElasticClient client, IOptions<ElasticSearchSettings> elasticOptions)
     {
         _client = client;
+        if (elasticOptions != null && elasticOptions.Value != null)
+            IndexAlias = string.IsNullOrWhiteSpace(elasticOptions.Value.IndexName) ? IndexAlias : elasticOptions.Value.IndexName;
     }
 
     public async Task<ProductSearchResponse> SearchAsync(ProductSearchRequest request, CancellationToken cancellationToken = default)

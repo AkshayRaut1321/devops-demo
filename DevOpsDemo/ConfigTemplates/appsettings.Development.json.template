@@ -5,12 +5,14 @@
       "Microsoft.AspNetCore": "Warning"
     }
   },
-  "MongoDbInfra": {
+  "MongoDbWebApi": {
     "ConnectionString": "mongodb://localhost:8001?directConnection=true",
-    "Database": "productdb"
+        "DatabaseName": "productdb",
+        "CollectionName": "products"
   },
-  "ElasticSearch": {
+  "ElasticSearchWebApi": {
     "NodeUrl": "http://localhost:8002",
-    "Index": "products_v1"
+    "IndexName": "products_v1",
+    "Alias": "products_current"
   }
 }

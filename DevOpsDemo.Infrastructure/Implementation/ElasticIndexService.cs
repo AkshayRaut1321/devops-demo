@@ -1,6 +1,8 @@
-using DevOpsDemo.Infrastructure.Entities;
+using DevOpsDemo.Infrastructure.Entities.Config;
+using DevOpsDemo.Infrastructure.Entities.Database;
 using DevOpsDemo.Infrastructure.Interfaces;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Nest;
 
 namespace DevOpsDemo.Infrastructure.Implementation
@@ -8,14 +10,22 @@ namespace DevOpsDemo.Infrastructure.Implementation
     public class ElasticIndexService : IElasticIndexService
     {
         private readonly IElasticClient _client;
-        private const string _indexVersion = "products_v1";
-        private const string _indexAlias = "products_current";
+        private readonly string _indexName = "products_v1";
+        private readonly string _indexAlias = "products_current";
         private readonly ILogger _logger;
 
-        public ElasticIndexService(IElasticClient client, ILogger<ElasticIndexService> logger)
+        public ElasticIndexService(IElasticClient client, ILogger<ElasticIndexService> logger,
+        IOptions<ElasticSearchSettings> options)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            if (options != null && options.Value != null)
+            {
+                ElasticSearchSettings _settings = options.Value;
+                _indexName = string.IsNullOrWhiteSpace(_settings.IndexName) ? _indexName : _settings.IndexName;
+                _indexAlias = string.IsNullOrWhiteSpace(_settings.IndexAlias) ? _indexAlias : _settings.IndexAlias;
+            }
         }
 
         public async Task EnsureIndexAsync()
@@ -27,7 +37,7 @@ namespace DevOpsDemo.Infrastructure.Implementation
                 return;
 
             // 2. Create physical index
-            var createIndexResponse = await _client.Indices.CreateAsync(_indexVersion, c => c
+            var createIndexResponse = await _client.Indices.CreateAsync(_indexName, c => c
                 .Settings(s => s
                     .NumberOfShards(1)
                     .NumberOfReplicas(0)
@@ -97,7 +107,7 @@ namespace DevOpsDemo.Infrastructure.Implementation
                 throw new Exception(createIndexResponse.DebugInformation);
 
             // 3. Create alias
-            var aliasResponse = await _client.Indices.PutAliasAsync(_indexVersion, _indexAlias);
+            var aliasResponse = await _client.Indices.PutAliasAsync(_indexName, _indexAlias);
 
             if (!aliasResponse.IsValid)
                 throw new Exception(aliasResponse.DebugInformation);

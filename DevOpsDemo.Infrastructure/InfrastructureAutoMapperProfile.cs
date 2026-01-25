@@ -1,6 +1,6 @@
 using AutoMapper;
 using DevOpsDemo.Domain.Models;
-using DevOpsDemo.Infrastructure.Entities;
+using DevOpsDemo.Infrastructure.Entities.Database;
 using MongoDB.Bson;
 
 namespace DevOpsDemo.Infrastructure

@@ -1,11 +1,12 @@
 using System.Diagnostics;
-using DevOpsDemo.IndexerWorker.Config;
+using DevOpsDemo.Infrastructure.Entities.Config;
 using DevOpsDemo.IndexerWorker.Infrastructure;
-using DevOpsDemo.Infrastructure.Entities;
+using DevOpsDemo.Infrastructure.Entities.Database;
 using DevOpsDemo.Infrastructure.Interfaces;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using DevOpsDemo.IndexerWorker.Entities.Config;
 
 namespace DevOpsDemo.IndexerWorker.Services
 {
@@ -16,7 +17,6 @@ namespace DevOpsDemo.IndexerWorker.Services
     public class FullReindexWorker : BackgroundService
     {
         private readonly MongoClientFactory _mongoFactory;
-        private readonly ElasticClientFactory _elasticFactory;
         private readonly IElasticIndexService _elasticIndexService;
         private readonly WorkerSettings _workerSettings;
         private readonly MongoDbSettings _mongoDbSettings;
@@ -24,14 +24,12 @@ namespace DevOpsDemo.IndexerWorker.Services
 
         public FullReindexWorker(
             MongoClientFactory mongoFactory,
-            ElasticClientFactory elasticFactory,
             IElasticIndexService elasticIndexService,
             IOptions<WorkerSettings> workerOptions,
             IOptions<MongoDbSettings> mongoOptions,
             ILogger<FullReindexWorker> logger)
         {
             _mongoFactory = mongoFactory;
-            _elasticFactory = elasticFactory;
             _elasticIndexService = elasticIndexService;
             _workerSettings = workerOptions.Value;
             _mongoDbSettings = mongoOptions.Value;
@@ -66,7 +64,7 @@ namespace DevOpsDemo.IndexerWorker.Services
         private async Task RunFullReindexAsync(CancellationToken cancellationToken)
         {
             var db = _mongoFactory.GetDatabase();
-            var collection = db.GetCollection<ProductEntity>(_mongoDbSettings.Collection);
+            var collection = db.GetCollection<ProductEntity>(_mongoDbSettings.CollectionName);
 
             // Count total documents (fast-ish; may be approximate depending on storage engine)
             var totalCount = await collection.EstimatedDocumentCountAsync(null, cancellationToken).ConfigureAwait(false);

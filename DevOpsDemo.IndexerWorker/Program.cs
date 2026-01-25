@@ -1,13 +1,21 @@
 using DevOpsDemo.IndexerWorker;
-using DevOpsDemo.IndexerWorker.Config;
+using DevOpsDemo.Infrastructure.Entities.Config;
 using DevOpsDemo.IndexerWorker.Infrastructure;
 using DevOpsDemo.IndexerWorker.Services;
 using DevOpsDemo.Infrastructure;
 using Serilog;
+using DevOpsDemo.IndexerWorker.Entities.Config;
 
 var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment.IsDevelopment());
-builder.Services.AddElasticInfrastructureServices(builder.Configuration, builder.Environment.IsDevelopment());
+
+// Load default + environment-specific JSON
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
+builder.Services.AddInfrastructureServices();
+builder.Services.AddElasticInfrastructureServices(builder.Environment.IsDevelopment());
 
 // -------------------------------------------------------
 // Serilog (console only for now)
@@ -23,7 +31,7 @@ builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection("MongoDbIndexer"));
 
 builder.Services.Configure<ElasticSearchSettings>(
-    builder.Configuration.GetSection("ElasticSearch"));
+    builder.Configuration.GetSection("ElasticSearchIndexer"));
 
 builder.Services.Configure<WorkerSettings>(
     builder.Configuration.GetSection("WorkerIndexer"));

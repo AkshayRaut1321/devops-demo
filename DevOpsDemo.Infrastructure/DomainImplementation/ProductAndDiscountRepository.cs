@@ -1,5 +1,5 @@
 using AutoMapper;
-using DevOpsDemo.Infrastructure.Entities;
+using DevOpsDemo.Infrastructure.Entities.Database;
 using MongoDB.Bson;
 using MongoDB.Driver;
 

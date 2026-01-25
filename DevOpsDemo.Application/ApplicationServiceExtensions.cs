@@ -11,9 +11,9 @@ namespace DevOpsDemo.Application
         public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration, bool isDevelopment)
         {
             // Call Infrastructure DI
-            services.AddInfrastructureServices(configuration, isDevelopment);
-            services.AddMongoInfrastructureServices(configuration, isDevelopment);
-            services.AddElasticInfrastructureServices(configuration, isDevelopment);
+            services.AddInfrastructureServices();
+            services.AddMongoInfrastructureServices(isDevelopment);
+            services.AddElasticInfrastructureServices(isDevelopment);
 
             // Application services
             services.AddScoped<IProductService, ProductService>();

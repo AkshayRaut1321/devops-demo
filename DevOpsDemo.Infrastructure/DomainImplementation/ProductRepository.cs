@@ -1,7 +1,6 @@
-
 using AutoMapper;
 using DevOpsDemo.Domain.Models;
-using DevOpsDemo.Infrastructure.Entities;
+using DevOpsDemo.Infrastructure.Entities.Database;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;

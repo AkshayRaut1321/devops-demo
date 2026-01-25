@@ -1,7 +1,7 @@
 using AutoMapper;
 using DevOpsDemo.Domain.Models;
 using DevOpsDemo.Infrastructure.DomainImplementation;
-using DevOpsDemo.Infrastructure.Entities;
+using DevOpsDemo.Infrastructure.Entities.Database;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;

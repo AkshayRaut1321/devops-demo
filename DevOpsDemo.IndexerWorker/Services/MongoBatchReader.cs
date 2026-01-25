@@ -1,10 +1,10 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
-using DevOpsDemo.IndexerWorker.Config;
 using Microsoft.Extensions.Options;
-using DevOpsDemo.Infrastructure.Entities;
+using DevOpsDemo.Infrastructure.Entities.Database;
 using DevOpsDemo.IndexerWorker.Infrastructure;
-using System.Runtime.CompilerServices; // ProductEntity
+using System.Runtime.CompilerServices;
+using DevOpsDemo.Infrastructure.Entities.Config; // ProductEntity
 
 namespace DevOpsDemo.IndexerWorker.Services
 {
@@ -77,7 +77,7 @@ namespace DevOpsDemo.IndexerWorker.Services
                     // lastDoc is BsonDocument; but because we used typed collection, it may be ProductEntity.
                     // To be safe, read the _id using a raw query:
                     var raw = await _mongoFactory.GetDatabase()
-                                                 .GetCollection<BsonDocument>(_settings.Collection)
+                                                 .GetCollection<BsonDocument>(_settings.CollectionName)
                                                  .Find(Builders<BsonDocument>.Filter.Empty)
                                                  .Sort(Builders<BsonDocument>.Sort.Ascending("_id"))
                                                  .Limit(1)

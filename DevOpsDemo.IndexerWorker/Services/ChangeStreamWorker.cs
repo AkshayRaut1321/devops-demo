@@ -1,11 +1,12 @@
-using DevOpsDemo.Infrastructure.Entities;
+using DevOpsDemo.Infrastructure.Entities.Database;
 using DevOpsDemo.Infrastructure.Interfaces;
 using MongoDB.Driver;
 using Microsoft.Extensions.Options;
-using DevOpsDemo.IndexerWorker.Config;
+using DevOpsDemo.Infrastructure.Entities.Config;
 using DevOpsDemo.IndexerWorker.Infrastructure;
 using DevOpsDemo.IndexerWorker.Entities;
 using MongoDB.Bson;
+using DevOpsDemo.IndexerWorker.Entities.Config;
 
 namespace DevOpsDemo.IndexerWorker.Services;
 
@@ -25,7 +26,7 @@ public class ChangeStreamWorker : BackgroundService
         _settings = workerSettings;
 
         var mongoDbSettings = mongoOptions.Value;
-        _collection = mongoFactory.GetDatabase().GetCollection<ProductEntity>(mongoDbSettings.Collection);
+        _collection = mongoFactory.GetDatabase().GetCollection<ProductEntity>(mongoDbSettings.CollectionName);
         _checkpointCollection = mongoFactory.GetDatabase()
             .GetCollection<ChangeStreamCheckpoint>(workerSettings.CheckpointCollection);
 

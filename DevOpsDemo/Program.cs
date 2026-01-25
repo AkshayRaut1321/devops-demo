@@ -1,5 +1,6 @@
 using DevOpsDemo.Application;
 using DevOpsDemo.Infrastructure.Interfaces;
+using DevOpsDemo.Infrastructure.Entities.Config;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,12 @@ builder.Configuration
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+var mongoDbSettings = builder.Configuration.GetSection("MongoDbWebApi");
+builder.Services.Configure<MongoDbSettings>(mongoDbSettings);
+
+var elasticSearchSettings = builder.Configuration.GetSection("ElasticSearchWebApi");
+builder.Services.Configure<ElasticSearchSettings>(elasticSearchSettings);
 
 //Place to add Dependency Injection, Logger, Configurations
 builder.Services.AddApplicationServices(builder.Configuration, builder.Environment.IsDevelopment());

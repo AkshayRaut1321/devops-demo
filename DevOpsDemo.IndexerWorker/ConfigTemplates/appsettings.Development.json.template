@@ -1,12 +1,12 @@
 {
   "MongoDbIndexer": {
-    "ConnectionString": "mongodb://mongo:27017",
-    "DatabaseName": "productdb",
+    "ConnectionString": "mongodb://localhost:8001/?directConnection=true",
+    "DatabaseName": "productsDb",
     "CollectionName": "products"
   },
   "ElasticSearchIndexer": {
-    "NodeUrl": "http://elasticsearch:9200",
-    "IndexName": "products_v1",
+    "NodeUrl": "http://localhost:8002",
+    "IndexName": "products",
     "Alias": "products_current"
   },
   "WorkerIndexer": {

@@ -1,4 +1,4 @@
-using DevOpsDemo.Infrastructure.Entities;
+using DevOpsDemo.Infrastructure.Entities.Database;
 
 namespace DevOpsDemo.Infrastructure.Interfaces
 {

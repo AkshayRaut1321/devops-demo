@@ -1,4 +1,4 @@
-using DevOpsDemo.IndexerWorker.Config;
+using DevOpsDemo.Infrastructure.Entities.Config;
 using Microsoft.Extensions.Options;
 using Nest;
 
@@ -24,8 +24,12 @@ namespace DevOpsDemo.IndexerWorker.Infrastructure
 
             var uri = new Uri(_settings.NodeUrl);
 
+            var defaultIndex = !string.IsNullOrWhiteSpace(_settings.IndexAlias) ? _settings.IndexAlias : _settings.IndexName;
+
+            _logger.LogInformation($"Initializing Elasticsearch client. Node={_settings.NodeUrl}, DefaultIndex={defaultIndex}");
+
             var settings = new ConnectionSettings(uri)
-                .DefaultIndex(_settings.IndexName)
+                .DefaultIndex(defaultIndex)
                 .ThrowExceptions()  // Better debugging
                 .DisableDirectStreaming(); // Helps logging request/response JSON
 

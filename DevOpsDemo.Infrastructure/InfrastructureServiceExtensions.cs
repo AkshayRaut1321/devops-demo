@@ -1,20 +1,20 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using Microsoft.Extensions.Configuration;
 using DevOpsDemo.Infrastructure.DomainImplementation;
 using MongoDB.Bson;
 using MongoDB.Driver.Core.Events;
 using Nest;
-using DevOpsDemo.Infrastructure.Entities;
 using DevOpsDemo.Infrastructure.Interfaces;
 using DevOpsDemo.Infrastructure.Implementation;
+using DevOpsDemo.Infrastructure.Entities.Config;
+using DevOpsDemo.Infrastructure.Entities.Database;
 
 namespace DevOpsDemo.Infrastructure;
 
 public static class InfrastructureServiceExtensions
 {
-    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration, bool isDevelopment)
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
     {
         services.AddScoped<IElasticIndexService, ElasticIndexService>();
 
@@ -27,12 +27,8 @@ public static class InfrastructureServiceExtensions
         return services;
     }
 
-    public static IServiceCollection AddMongoInfrastructureServices(this IServiceCollection services, IConfiguration configuration, bool isDevelopment)
+    public static IServiceCollection AddMongoInfrastructureServices(this IServiceCollection services, bool isDevelopment)
     {
-        // MongoDB settings
-        var mongoDbSettingsSection = configuration.GetSection("MongoDbInfra");
-        services.Configure<MongoDbSettings>(mongoDbSettingsSection);
-
         services.AddSingleton<IMongoClient>(sp =>
         {
             var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
@@ -56,22 +52,21 @@ public static class InfrastructureServiceExtensions
         {
             var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
             var client = sp.GetRequiredService<IMongoClient>();
-            return client.GetDatabase(settings.Database);
+            return client.GetDatabase(settings.DatabaseName);
         });
 
         return services;
     }
     
-    public static IServiceCollection AddElasticInfrastructureServices(this IServiceCollection services, IConfiguration configuration, bool isDevelopment)
+    public static IServiceCollection AddElasticInfrastructureServices(this IServiceCollection services, bool isDevelopment)
     {
-        var elasticUrl = configuration["ElasticSearch:NodeUrl"];
-        var elasticIndex = configuration["ElasticSearch:Index"];
-
         services.AddSingleton<IElasticClient>(sp =>
         {
-            var uri = new Uri(elasticUrl);
-            var settings = new ConnectionSettings(uri)
-                .DefaultIndex(elasticIndex)
+            var elasticSettings = sp.GetRequiredService<IOptions<ElasticSearchSettings>>().Value;
+
+            var uri = new Uri(elasticSettings.NodeUrl);
+            var elasticConnectionSettings = new ConnectionSettings(uri)
+                .DefaultIndex(elasticSettings.IndexName)
                 // Map ProductEntity.Id as document Id for NEST;
                 .DefaultMappingFor<ProductEntity>(m => m.IdProperty(p => p.Id)
                 .PropertyName(p => p.Name, "name"))
@@ -85,10 +80,10 @@ public static class InfrastructureServiceExtensions
                 .ServerCertificateValidationCallback((o, cert, chain, errors) => true); // allow self-signed certs
                 
             #if DEBUG
-                settings.DisableDirectStreaming();
+                elasticConnectionSettings.DisableDirectStreaming();
             #endif
             
-            return new ElasticClient(settings);
+            return new ElasticClient(elasticConnectionSettings);
         });
 
         return services;

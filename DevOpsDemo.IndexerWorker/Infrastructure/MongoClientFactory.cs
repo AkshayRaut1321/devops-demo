@@ -1,4 +1,4 @@
-using DevOpsDemo.IndexerWorker.Config;
+using DevOpsDemo.Infrastructure.Entities.Config;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
@@ -39,11 +39,11 @@ public class MongoClientFactory
 
     public IMongoDatabase GetDatabase()
     {
-        return GetClient().GetDatabase(_settings.Database);
+        return GetClient().GetDatabase(_settings.DatabaseName);
     }
 
     public IMongoCollection<T> GetCollection<T>()
     {
-        return GetDatabase().GetCollection<T>(_settings.Collection);
+        return GetDatabase().GetCollection<T>(_settings.CollectionName);
     }
 }

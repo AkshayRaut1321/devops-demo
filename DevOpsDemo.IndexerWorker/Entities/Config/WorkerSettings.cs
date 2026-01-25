@@ -1,4 +1,4 @@
-namespace DevOpsDemo.IndexerWorker.Config;
+namespace DevOpsDemo.IndexerWorker.Entities.Config;
 
 public class WorkerSettings
 {
