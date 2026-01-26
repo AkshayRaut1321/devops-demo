@@ -1,13 +1,15 @@
 version: "3.8"
 services:
-  devops-worker:
+  indexer-worker:
     build:
       context: .
       dockerfile: DevOpsDemo.IndexerWorker/Dockerfile
-    container_name: devops-worker
+    container_name: devops-demo-indexer-worker
     depends_on:
-      - mongo
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+      mongo:
+        condition: service_started
     environment:
       DOTNET_ENVIRONMENT: "Docker"
     restart: unless-stopped

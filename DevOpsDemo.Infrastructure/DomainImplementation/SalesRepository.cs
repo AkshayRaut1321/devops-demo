@@ -23,7 +23,7 @@ namespace DevOpsDemo.Infrastructure.DomainImplementation
                 new BsonDocument("$match", new BsonDocument("Price", new BsonDocument("$gt", 10))),
                 new BsonDocument("$lookup", new BsonDocument
                 {
-                    { "from", "Products" },
+                    { "from", "products" },
                     { "let", new BsonDocument("productName", "$ProductName") },
                     { "pipeline", new BsonArray
                         {

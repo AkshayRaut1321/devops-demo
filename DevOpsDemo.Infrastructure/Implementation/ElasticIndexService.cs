@@ -31,86 +31,97 @@ namespace DevOpsDemo.Infrastructure.Implementation
         public async Task EnsureIndexAsync()
         {
             // 1. Check if alias already exists
-            var existsResponse = await _client.Indices.AliasExistsAsync(_indexAlias);
-
-            if (existsResponse.Exists)
+            var aliasExists = await _client.Indices.AliasExistsAsync(_indexAlias);
+            if (aliasExists.Exists)
+            {
+                _logger.LogInformation("Elasticsearch index alias '{Alias}' already exists. Skipping index creation.", _indexAlias);
                 return;
+            }
 
-            // 2. Create physical index
-            var createIndexResponse = await _client.Indices.CreateAsync(_indexName, c => c
-                .Settings(s => s
-                    .NumberOfShards(1)
-                    .NumberOfReplicas(0)
-                    .Analysis(a => a
-                        .TokenFilters(tf => tf
-                            .EdgeNGram("edge_ngram_filter", eg => eg
-                                .MinGram(2)
-                                .MaxGram(20)
+            // 2. Index exists?
+            var indexExists = await _client.Indices.ExistsAsync(_indexName);
+            if (!indexExists.Exists)
+            {
+                // 2. Create physical index
+                var createIndexResponse = await _client.Indices.CreateAsync(_indexName, c => c
+                    .Settings(s => s
+                        .NumberOfShards(1)
+                        .NumberOfReplicas(0)
+                        .Analysis(a => a
+                            .TokenFilters(tf => tf
+                                .EdgeNGram("edge_ngram_filter", eg => eg
+                                    .MinGram(2)
+                                    .MaxGram(20)
+                                )
                             )
-                        )
-                        .Analyzers(an => an
-                            .Custom("autocomplete_analyzer", ca => ca
-                                .Tokenizer("standard")
-                                .Filters("lowercase", "edge_ngram_filter")
-                            )
-                        )
-                    )
-                )
-                .Map<ProductEntity>(m => m
-                    .Properties(ps => ps
-
-                        // ID
-                        .Keyword(k => k
-                            .Name(p => p.Id)
-                        )
-
-                        // Name: full text + keyword + autocomplete
-                        .Text(t => t
-                            .Name(p => p.Name)
-                            .Analyzer("standard")
-                            .Fields(f => f
-                                .Keyword(k => k.Name("keyword"))
-                                .Text(tt => tt
-                                    .Name("autocomplete")
-                                    .Analyzer("autocomplete_analyzer")
-                                    .SearchAnalyzer("standard")
+                            .Analyzers(an => an
+                                .Custom("autocomplete_analyzer", ca => ca
+                                    .Tokenizer("standard")
+                                    .Filters("lowercase", "edge_ngram_filter")
                                 )
                             )
                         )
+                    )
+                    .Map<ProductEntity>(m => m
+                        .Properties(ps => ps
 
-                        // Description: full text
-                        .Text(t => t
-                            .Name(p => p.Description)
-                            .Analyzer("standard")
-                        )
+                            // ID
+                            .Keyword(k => k
+                                .Name(p => p.Id)
+                            )
 
-                        // Category: filterable + sortable
-                        .Keyword(k => k
-                            .Name(p => p.Category)
-                        )
+                            // Name: full text + keyword + autocomplete
+                            .Text(t => t
+                                .Name(p => p.Name)
+                                .Analyzer("standard")
+                                .Fields(f => f
+                                    .Keyword(k => k.Name("keyword"))
+                                    .Text(tt => tt
+                                        .Name("autocomplete")
+                                        .Analyzer("autocomplete_analyzer")
+                                        .SearchAnalyzer("standard")
+                                    )
+                                )
+                            )
 
-                        // Price: numeric filtering/sorting
-                        .Number(n => n
-                            .Name(p => p.Price)
-                            .Type(NumberType.Double)
-                        )
+                            // Description: full text
+                            .Text(t => t
+                                .Name(p => p.Description)
+                                .Analyzer("standard")
+                            )
 
-                        // CreatedAt: sorting
-                        .Date(d => d
-                            .Name(p => p.CreatedAt)
+                            // Category: filterable + sortable
+                            .Keyword(k => k
+                                .Name(p => p.Category)
+                            )
+
+                            // Price: numeric filtering/sorting
+                            .Number(n => n
+                                .Name(p => p.Price)
+                                .Type(NumberType.Double)
+                            )
+
+                            // CreatedAt: sorting
+                            .Date(d => d
+                                .Name(p => p.CreatedAt)
+                            )
                         )
                     )
-                )
-            );
+                );
 
-            if (!createIndexResponse.IsValid)
-                throw new Exception(createIndexResponse.DebugInformation);
+                if (!createIndexResponse.IsValid)
+                    throw new Exception(createIndexResponse.DebugInformation);
+            }
+            else
+            {
+                _logger.LogInformation("Elasticsearch index '{Index}' already exists. Creating alias '{Alias}'.", _indexName, _indexAlias);
 
-            // 3. Create alias
-            var aliasResponse = await _client.Indices.PutAliasAsync(_indexName, _indexAlias);
+                // 3. Create alias
+                var aliasResponse = await _client.Indices.PutAliasAsync(_indexName, _indexAlias);
 
-            if (!aliasResponse.IsValid)
-                throw new Exception(aliasResponse.DebugInformation);
+                if (!aliasResponse.IsValid)
+                    throw new Exception(aliasResponse.DebugInformation);
+            }
         }
 
         public async Task IndexDocumentAsync(ProductEntity product)

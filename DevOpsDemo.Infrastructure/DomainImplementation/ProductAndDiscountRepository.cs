@@ -13,8 +13,8 @@ namespace DevOpsDemo.Infrastructure.DomainImplementation
 
         public ProductAndDiscountRepository(IMongoDatabase database, IMapper mapper)
         {
-            _productsCollection = database.GetCollection<ProductEntity>("Products");
-            _discountCollection = database.GetCollection<DiscountEntity>("Discounts");
+            _productsCollection = database.GetCollection<ProductEntity>("products");
+            _discountCollection = database.GetCollection<DiscountEntity>("discounts");
             _mapper = mapper;
             EnsureIndexes();
         }
@@ -51,7 +51,7 @@ namespace DevOpsDemo.Infrastructure.DomainImplementation
                             new BsonDocument("$addFields", new BsonDocument { { "_fromProducts", false } }),
                             new BsonDocument("$lookup", new BsonDocument
                             {
-                                { "from", "Products" },
+                                { "from", "products" },
                                 { "localField", "ProductId" },
                                 { "foreignField", "_id" },
                                 { "as", "products" }

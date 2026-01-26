@@ -14,7 +14,7 @@ namespace DevOpsDemo.Infrastructure.DomainImplementation
 
         public ProductRepository(IMongoDatabase database, IMapper mapper)
         {
-            _collection = database.GetCollection<ProductEntity>("Products");
+            _collection = database.GetCollection<ProductEntity>("products");
             _mapper = mapper;
             EnsureIndexes();
         }

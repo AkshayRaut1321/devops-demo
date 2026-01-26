@@ -1,99 +1,116 @@
 using DevOpsDemo.Infrastructure.Entities.Database;
 using DevOpsDemo.Infrastructure.Interfaces;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 public class DatabaseSeeder
 {
     private readonly IMongoDatabase _mongoDatabase;
+    private readonly ILogger _logger;
 
-    public DatabaseSeeder(IMongoDatabase mongoDatabase)
+    public DatabaseSeeder(IMongoDatabase mongoDatabase, ILogger<DatabaseSeeder> logger)
     {
         _mongoDatabase = mongoDatabase;
+        _logger = logger;
     }
 
     public async Task SeedAsync()
     {
-        var productCollection = _mongoDatabase.GetCollection<ProductEntity>("Products");
-        var salesCollection = _mongoDatabase.GetCollection<SaleEntity>("Sales");
-
-        var productCount = await productCollection.CountDocumentsAsync(FilterDefinition<ProductEntity>.Empty);
-        if (productCount == 0)
+        _logger.LogInformation("Starting database seeding...");
+        try
         {
-            var random = new Random();
+            var productCollection = _mongoDatabase.GetCollection<ProductEntity>("products");
+            var salesCollection = _mongoDatabase.GetCollection<SaleEntity>("sales");
 
-            // Categories and sample product name prefixes
-            var categories = new Dictionary<string, string[]>
+            var productCount = await productCollection.CountDocumentsAsync(FilterDefinition<ProductEntity>.Empty);
+            if (productCount == 0)
             {
-                ["Electronics - Mobile Phones"] = new[] { "iPhone", "Galaxy", "Pixel", "Redmi", "OnePlus" },
-                ["Electronics - Laptops"] = new[] { "MacBook", "Dell XPS", "ThinkPad", "Surface", "HP Spectre" },
-                ["Electronics Accessories"] = new[] { "Wireless Mouse", "Keyboard", "Headphones", "Charger", "USB Cable" },
-                ["Home Appliances"] = new[] { "Air Conditioner", "Refrigerator", "Washing Machine", "Microwave" },
-                ["Home Decor"] = new[] { "Wall Painting", "Decorative Lamp", "Vase", "Cushion" },
-                ["Kitchen Appliances"] = new[] { "Mixer Grinder", "Cookware Set", "Blender", "Toaster" },
-                ["Sports Equipment"] = new[] { "Football", "Basketball", "Cricket Bat", "Tennis Ball" },
-                ["Outdoor Sports"] = new[] { "Tennis Racket", "Golf Club", "Camping Tent", "Hiking Backpack" },
-                ["Fitness Equipment"] = new[] { "Treadmill", "Dumbbell Set", "Yoga Mat", "Exercise Bike" },
-                ["Men's Fashion"] = new[] { "T-Shirt", "Jeans", "Shirt", "Jacket", "Shoes" },
-                ["Women's Fashion"] = new[] { "Dress", "Skirt", "Blouse", "Handbag", "Heels" },
-                ["Kids Fashion"] = new[] { "Shorts", "T-Shirt", "Dress", "Sneakers" },
-                ["Fashion Accessories"] = new[] { "Sunglasses", "Watch", "Belt", "Wallet", "Scarf" },
-                ["Books - Fiction"] = new[] { "Novel", "Story", "Tale", "Mystery" },
-                ["Books - Non Fiction"] = new[] { "Biography", "Memoir", "History Book", "Self Help" },
-                ["Books - Educational"] = new[] { "Math Textbook", "Science Guide", "English Workbook" },
-                ["Toys - Educational"] = new[] { "Puzzle", "Block Set", "Learning Kit" },
-                ["Toys - Outdoor"] = new[] { "Swing Set", "Slide", "Trampoline" },
-                ["Pet Supplies"] = new[] { "Pet Toy", "Pet Bed", "Collar", "Leash" },
-                ["Pet Food"] = new[] { "Dog Food Pack", "Cat Food Pack", "Bird Seeds" }
-            };
+                _logger.LogInformation($"Seeding products");
 
-            var products = new List<ProductEntity>();
+                var random = new Random();
 
-            foreach (var category in categories.Keys)
-            {
-                var names = categories[category];
-                for (int i = 0; i < 10; i++) // 10 products per category
+                // Categories and sample product name prefixes
+                var categories = new Dictionary<string, string[]>
                 {
-                    var name = $"{names[random.Next(names.Length)]}";
-                    var price = Math.Round(random.NextDouble() * 490 + 10, 2); // 10.00 to 500.00
-                    products.Add(new ProductEntity
-                    {
-                        Name = name,
-                        Description = $"Description for {name}",
-                        Category = category,
-                        Price = (decimal)price,
-                        CreatedAt = DateTime.Now
-                    });
-                }
-            }
+                    ["Electronics - Mobile Phones"] = new[] { "iPhone", "Galaxy", "Pixel", "Redmi", "OnePlus" },
+                    ["Electronics - Laptops"] = new[] { "MacBook", "Dell XPS", "ThinkPad", "Surface", "HP Spectre" },
+                    ["Electronics Accessories"] = new[] { "Wireless Mouse", "Keyboard", "Headphones", "Charger", "USB Cable" },
+                    ["Home Appliances"] = new[] { "Air Conditioner", "Refrigerator", "Washing Machine", "Microwave" },
+                    ["Home Decor"] = new[] { "Wall Painting", "Decorative Lamp", "Vase", "Cushion" },
+                    ["Kitchen Appliances"] = new[] { "Mixer Grinder", "Cookware Set", "Blender", "Toaster" },
+                    ["Sports Equipment"] = new[] { "Football", "Basketball", "Cricket Bat", "Tennis Ball" },
+                    ["Outdoor Sports"] = new[] { "Tennis Racket", "Golf Club", "Camping Tent", "Hiking Backpack" },
+                    ["Fitness Equipment"] = new[] { "Treadmill", "Dumbbell Set", "Yoga Mat", "Exercise Bike" },
+                    ["Men's Fashion"] = new[] { "T-Shirt", "Jeans", "Shirt", "Jacket", "Shoes" },
+                    ["Women's Fashion"] = new[] { "Dress", "Skirt", "Blouse", "Handbag", "Heels" },
+                    ["Kids Fashion"] = new[] { "Shorts", "T-Shirt", "Dress", "Sneakers" },
+                    ["Fashion Accessories"] = new[] { "Sunglasses", "Watch", "Belt", "Wallet", "Scarf" },
+                    ["Books - Fiction"] = new[] { "Novel", "Story", "Tale", "Mystery" },
+                    ["Books - Non Fiction"] = new[] { "Biography", "Memoir", "History Book", "Self Help" },
+                    ["Books - Educational"] = new[] { "Math Textbook", "Science Guide", "English Workbook" },
+                    ["Toys - Educational"] = new[] { "Puzzle", "Block Set", "Learning Kit" },
+                    ["Toys - Outdoor"] = new[] { "Swing Set", "Slide", "Trampoline" },
+                    ["Pet Supplies"] = new[] { "Pet Toy", "Pet Bed", "Collar", "Leash" },
+                    ["Pet Food"] = new[] { "Dog Food Pack", "Cat Food Pack", "Bird Seeds" }
+                };
 
-            await productCollection.InsertManyAsync(products);
+                var products = new List<ProductEntity>();
 
-            // Seed sales data
-            var sales = new List<SaleEntity>();
-            foreach (var product in products)
-            {
-                int salesCount = random.Next(3, 10); // Each product has 3-10 sales records
-                for (int j = 0; j < salesCount; j++)
+                foreach (var category in categories.Keys)
                 {
-                    sales.Add(new SaleEntity
+                    var names = categories[category];
+                    for (int i = 0; i < 10; i++) // 10 products per category
                     {
-                        ProductName = product.Name,
-                        Category = product.Category,
-                        Quantity = random.Next(1, 20),
-                        Price = product.Price,
-                        SaleDate = DateTime.Now.AddDays(-random.Next(0, 60)) // Sales in past 60 days
-                    });
+                        var name = $"{names[random.Next(names.Length)]}";
+                        var price = Math.Round(random.NextDouble() * 490 + 10, 2); // 10.00 to 500.00
+                        products.Add(new ProductEntity
+                        {
+                            Name = name,
+                            Description = $"Description for {name}",
+                            Category = category,
+                            Price = (decimal)price,
+                            CreatedAt = DateTime.Now
+                        });
+                    }
                 }
-            }
 
-            await salesCollection.InsertManyAsync(sales);
+                await productCollection.InsertManyAsync(products);
+                _logger.LogInformation($"Added products {products.Count} records to the MongoDB.");
+
+                // Seed sales data
+                var sales = new List<SaleEntity>();
+                foreach (var product in products)
+                {
+                    int salesCount = random.Next(3, 10); // Each product has 3-10 sales records
+                    for (int j = 0; j < salesCount; j++)
+                    {
+                        sales.Add(new SaleEntity
+                        {
+                            ProductName = product.Name,
+                            Category = product.Category,
+                            Quantity = random.Next(1, 20),
+                            Price = product.Price,
+                            SaleDate = DateTime.Now.AddDays(-random.Next(0, 60)) // Sales in past 60 days
+                        });
+                    }
+                }
+
+                await salesCollection.InsertManyAsync(sales);
+                
+                _logger.LogInformation($"Added sales {sales.Count} records to the MongoDB.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error during database seeding.");
+            throw;
         }
     }
 
     public async Task SeedElasticAsync(IElasticIndexService elasticIndexService)
     {
-        var productCollection = _mongoDatabase.GetCollection<ProductEntity>("Products");
-        
+        var productCollection = _mongoDatabase.GetCollection<ProductEntity>("products");
+
         await elasticIndexService.EnsureIndexAsync();
 
         //read all products from MongoDB (project to ProductEntity) - implement paging if large.

@@ -30,14 +30,14 @@ var app = builder.Build();
 //Place to add Middleware.
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")
+if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")//Don't change this. Keep it for testing on Docker.
 {
     using var scope = app.Services.CreateScope();
     var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
     await seeder.SeedAsync();
 
-    var elasticIndexService = scope.ServiceProvider.GetRequiredService<IElasticIndexService>();
-    await seeder.SeedElasticAsync(elasticIndexService);
+    // var elasticIndexService = scope.ServiceProvider.GetRequiredService<IElasticIndexService>();
+    // await seeder.SeedElasticAsync(elasticIndexService);
 
     app.UseSwagger();
     app.UseSwaggerUI();

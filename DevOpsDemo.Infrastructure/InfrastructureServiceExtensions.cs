@@ -67,8 +67,13 @@ public static class InfrastructureServiceExtensions
             var uri = new Uri(elasticSettings.NodeUrl);
             var elasticConnectionSettings = new ConnectionSettings(uri)
                 // Map ProductEntity.Id as document Id for NEST;
-                .DefaultMappingFor<ProductEntity>(m => m.IdProperty(p => p.Id)
-                .PropertyName(p => p.Name, "name"))
+                .BasicAuthentication(
+                    elasticSettings.Username,
+                    elasticSettings.Password
+                )
+                .DefaultMappingFor<ProductEntity>(m => m
+                    .IdProperty(p => p.Id)
+                    .PropertyName(p => p.Name, "name"))
                 // Required additions for ES 8.x stability:
                 .DisableDirectStreaming()                      // helpful debugging
                 .RequestTimeout(TimeSpan.FromSeconds(60))      // ES operations can be slow at startup
