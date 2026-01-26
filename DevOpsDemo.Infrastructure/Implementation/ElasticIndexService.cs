@@ -111,17 +111,19 @@ namespace DevOpsDemo.Infrastructure.Implementation
 
                 if (!createIndexResponse.IsValid)
                     throw new Exception(createIndexResponse.DebugInformation);
-            }
-            else
-            {
-                _logger.LogInformation("Elasticsearch index '{Index}' already exists. Creating alias '{Alias}'.", _indexName, _indexAlias);
 
-                // 3. Create alias
-                var aliasResponse = await _client.Indices.PutAliasAsync(_indexName, _indexAlias);
-
-                if (!aliasResponse.IsValid)
-                    throw new Exception(aliasResponse.DebugInformation);
+                _logger.LogInformation($"Elasticsearch index '{_indexName}' created.");
             }
+
+            _logger.LogInformation($"Creating alias '{_indexAlias}'.");
+
+            // 3. Create alias
+            var aliasResponse = await _client.Indices.PutAliasAsync(_indexName, _indexAlias);
+
+            if (!aliasResponse.IsValid)
+                throw new Exception(aliasResponse.DebugInformation);
+
+            _logger.LogInformation($"Elasticsearch index alias '{_indexAlias}' created.");
         }
 
         public async Task IndexDocumentAsync(ProductEntity product)

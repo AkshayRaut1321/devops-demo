@@ -12,4 +12,9 @@ services:
         condition: service_started
     environment:
       DOTNET_ENVIRONMENT: "Docker"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
     restart: unless-stopped

@@ -3,10 +3,13 @@ using DevOpsDemo.Infrastructure.Entities.Config;
 using DevOpsDemo.IndexerWorker.Infrastructure;
 using DevOpsDemo.IndexerWorker.Services;
 using DevOpsDemo.Infrastructure;
-using Serilog;
+// using Serilog;
 using DevOpsDemo.IndexerWorker.Entities.Config;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Hosting;
 
-var builder = Host.CreateApplicationBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
 // Load default + environment-specific JSON
 builder.Configuration
@@ -42,6 +45,8 @@ builder.Services.Configure<WorkerSettings>(
 // -------------------------------------------------------
 builder.Services.AddSingleton<MongoClientFactory>();
 builder.Services.AddSingleton<ElasticClientFactory>();
+// Readiness state
+builder.Services.AddSingleton<IndexerReadiness>();
 // -------------------------------------------------------
 // bootstrap hosted service
 // -------------------------------------------------------
@@ -52,5 +57,14 @@ builder.Services.AddHostedService<ElasticBootstrapService>();
 builder.Services.AddHostedService<ChangeStreamWorker>();
 builder.Services.AddHostedService<FullReindexWorker>();
 
-var host = builder.Build();
-host.Run();
+builder.WebHost.UseUrls("http://0.0.0.0:5000");
+
+var app = builder.Build();
+
+app.MapGet("/health/ready", (IndexerReadiness readiness) =>
+{
+    return readiness.IsReady ? Results.Ok("Indexer ready") : Results.StatusCode(503);
+});
+
+// Single lifecycle owner
+app.Run();

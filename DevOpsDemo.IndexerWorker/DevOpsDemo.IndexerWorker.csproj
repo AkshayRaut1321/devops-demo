@@ -20,5 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DevOpsDemo.Infrastructure\DevOpsDemo.Infrastructure.csproj" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 </Project>
