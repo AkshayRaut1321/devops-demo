@@ -4,7 +4,7 @@ services:
     image: mongo:6.0
     ports:
       - "8001:27017"
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    command: ["mongod", "--replSet", "rs0"]
     volumes:
       - replica-mongo-data:/data/db
     healthcheck:
