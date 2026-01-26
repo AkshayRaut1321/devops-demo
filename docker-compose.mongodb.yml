@@ -4,15 +4,43 @@ services:
     image: mongo:6.0
     ports:
       - "8001:27017"
-    command: ["--replSet", "rs0"]   # enable single-node replica set to use Transactions
-    volumes: # to be created in Docker filesystem.
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    volumes:
       - replica-mongo-data:/data/db
-    # volumes: # for pointing to local database copy
-    # - "D:/Lab databases/devops-demo/mongo-data:/data/db"
     healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      test: |
+        mongosh --quiet --eval "
+          try {
+            var status = rs.status();
+            if (status.ok === 1) {
+              print('Replica set already initialized');
+              quit(0);
+            }
+          } catch(e) {
+            if (e.codeName === 'NotYetInitialized') {
+              print('Initializing replica set...');
+              var result = rs.initiate({
+                _id: 'rs0',
+                members: [{ _id: 0, host: 'mongo:27017' }]
+              });
+              if (result.ok === 1) {
+                print('Replica set initialized successfully');
+                quit(0);
+              } else {
+                print('Failed to initialize replica set');
+                quit(1);
+              }
+            }
+            print('Unknown error: ' + e.message);
+            quit(1);
+          }
+        " || exit 1
       interval: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+    environment:
+      - MONGO_INITDB_DATABASE=admin
 
 volumes:
   replica-mongo-data:
