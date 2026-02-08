@@ -9,6 +9,7 @@ using DevOpsDemo.Infrastructure.Interfaces;
 using DevOpsDemo.Infrastructure.Implementation;
 using DevOpsDemo.Infrastructure.Entities.Config;
 using DevOpsDemo.Infrastructure.Entities.Database;
+using Elasticsearch.Net;
 
 namespace DevOpsDemo.Infrastructure;
 
@@ -57,36 +58,64 @@ public static class InfrastructureServiceExtensions
 
         return services;
     }
-    
+
     public static IServiceCollection AddElasticInfrastructureServices(this IServiceCollection services, bool isDevelopment)
     {
         services.AddSingleton<IElasticClient>(sp =>
         {
             var elasticSettings = sp.GetRequiredService<IOptions<ElasticSearchSettings>>().Value;
 
+            // ADD THIS DEBUG LOGGING
+            Console.WriteLine($"ENV: {Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}");
+            Console.WriteLine("=== ELASTICSEARCH CONFIGURATION ===");
+            Console.WriteLine($"NodeUrl: {elasticSettings.NodeUrl}");
+            Console.WriteLine($"Username: {elasticSettings.Username}");
+            Console.WriteLine($"Password: {elasticSettings.Password}");
+            Console.WriteLine($"IndexName: {elasticSettings.IndexName}");
+            Console.WriteLine($"IndexAlias: {elasticSettings.IndexAlias}");
+            Console.WriteLine($"IndexAlias: {elasticSettings.CloudId}");
+            Console.WriteLine("===================================");
+
             var uri = new Uri(elasticSettings.NodeUrl);
-            var elasticConnectionSettings = new ConnectionSettings(uri)
-                // Map ProductEntity.Id as document Id for NEST;
-                .BasicAuthentication(
+
+            ConnectionSettings elasticConnectionSettings;
+            if (!string.IsNullOrWhiteSpace(elasticSettings.CloudId))
+            {
+                // Elastic Cloud
+                elasticConnectionSettings =
+        new ConnectionSettings(
+            new CloudConnectionPool(
+                elasticSettings.CloudId,
+                new BasicAuthenticationCredentials(
                     elasticSettings.Username,
-                    elasticSettings.Password
-                )
-                .DefaultMappingFor<ProductEntity>(m => m
-                    .IdProperty(p => p.Id)
-                    .PropertyName(p => p.Name, "name"))
-                // Required additions for ES 8.x stability:
-                .DisableDirectStreaming()                      // helpful debugging
-                .RequestTimeout(TimeSpan.FromSeconds(60))      // ES operations can be slow at startup
-                .PingTimeout(TimeSpan.FromSeconds(30))         // avoid premature ping failures
-                .SniffOnStartup(false)                         // disable sniffing (not needed for single-node)
-                .SniffOnConnectionFault(false)
-                .EnableApiVersioningHeader()                   // recommended for ES 8+
-                .ServerCertificateValidationCallback((o, cert, chain, errors) => true); // allow self-signed certs
-                
-            #if DEBUG
-                elasticConnectionSettings.DisableDirectStreaming();
-            #endif
-            
+                    elasticSettings.Password)));
+            }
+            else
+            {
+                // Local Docker / self-hosted ES
+                elasticConnectionSettings =
+                    new ConnectionSettings(new Uri(elasticSettings.NodeUrl))
+                        .BasicAuthentication(
+                            elasticSettings.Username,
+                            elasticSettings.Password);
+
+            }
+            elasticConnectionSettings.DefaultMappingFor<ProductEntity>(m => m
+                   .IdProperty(p => p.Id)
+                   .PropertyName(p => p.Name, "name"))
+               // Required additions for ES 8.x stability:
+               .DisableDirectStreaming()                      // helpful debugging
+               .RequestTimeout(TimeSpan.FromSeconds(60))      // ES operations can be slow at startup
+               .PingTimeout(TimeSpan.FromSeconds(30))         // avoid premature ping failures
+               .SniffOnStartup(false)                         // disable sniffing (not needed for single-node)
+               .SniffOnConnectionFault(false)
+               .EnableApiVersioningHeader()                   // recommended for ES 8+
+               .ServerCertificateValidationCallback((o, cert, chain, errors) => true); // allow self-signed certs
+
+#if DEBUG
+            elasticConnectionSettings.DisableDirectStreaming();
+#endif
+
             return new ElasticClient(elasticConnectionSettings);
         });
 

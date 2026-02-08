@@ -44,7 +44,6 @@ builder.Services.Configure<WorkerSettings>(
 // Mongo client factory
 // -------------------------------------------------------
 builder.Services.AddSingleton<MongoClientFactory>();
-builder.Services.AddSingleton<ElasticClientFactory>();
 // Readiness state
 builder.Services.AddSingleton<IndexerReadiness>();
 // -------------------------------------------------------

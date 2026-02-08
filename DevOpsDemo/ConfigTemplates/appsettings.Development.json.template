@@ -13,6 +13,9 @@
   "ElasticSearchWebApi": {
     "NodeUrl": "http://localhost:8002",
     "IndexName": "products_v1",
-    "IndexAlias": "products_current"
+    "IndexAlias": "products_current",
+    "Username": "elastic",
+    "Password": "elastic123",
+    "CloudId": ""
   }
 }

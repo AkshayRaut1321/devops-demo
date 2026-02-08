@@ -7,7 +7,10 @@
   "ElasticSearchIndexer": {
     "NodeUrl": "http://localhost:8002",
     "IndexName": "products",
-    "IndexAlias": "products_current"
+    "IndexAlias": "products_current",
+    "Username": "elastic",
+    "Password": "elastic123",
+    "CloudId": ""
   },
   "WorkerIndexer": {
     "RetryDelaySeconds": 5,

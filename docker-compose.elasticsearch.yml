@@ -28,7 +28,7 @@ services:
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - ELASTICSEARCH_USERNAME=kibana_system
-      - ELASTICSEARCH_PASSWORD=xo5IZSlyOV09o_FgbgZ6
+      - ELASTICSEARCH_PASSWORD=8_e1I_xKZx=1O1v1yWP7
 
 volumes:
   es-data:     # ADDED
