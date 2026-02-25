@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
     environment:
        - discovery.type=single-node
        - xpack.security.enabled=true
@@ -22,13 +22,13 @@ services:
       retries: 20
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.10.2
+    image: docker.elastic.co/kibana/kibana:9.0.0
     ports:
       - "8003:5601"
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - ELASTICSEARCH_USERNAME=kibana_system
-      - ELASTICSEARCH_PASSWORD=8_e1I_xKZx=1O1v1yWP7
+      - ELASTICSEARCH_PASSWORD=o+5Gp4DkGGHUXoXH61cd
 
 volumes:
   es-data:     # ADDED

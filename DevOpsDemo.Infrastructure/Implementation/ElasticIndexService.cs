@@ -1,20 +1,20 @@
 using DevOpsDemo.Infrastructure.Entities.Config;
 using DevOpsDemo.Infrastructure.Entities.Database;
 using DevOpsDemo.Infrastructure.Interfaces;
+using Elastic.Clients.Elasticsearch;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Nest;
 
 namespace DevOpsDemo.Infrastructure.Implementation
 {
     public class ElasticIndexService : IElasticIndexService
     {
-        private readonly IElasticClient _client;
+        private readonly ElasticsearchClient _client;
         private readonly string _indexName = "products_v1";
         private readonly string _indexAlias = "products_current";
         private readonly ILogger _logger;
 
-        public ElasticIndexService(IElasticClient client, ILogger<ElasticIndexService> logger,
+        public ElasticIndexService(ElasticsearchClient client, ILogger<ElasticIndexService> logger,
         IOptions<ElasticSearchSettings> options)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
@@ -31,18 +31,24 @@ namespace DevOpsDemo.Infrastructure.Implementation
         public async Task EnsureIndexAsync()
         {
             // 1. Check if alias already exists
-            var aliasExists = await _client.Indices.AliasExistsAsync(_indexAlias);
-            if (aliasExists.Exists)
+            var aliasResponse = await _client.Indices.GetAliasAsync(a => a.Name(_indexAlias));
+            if (aliasResponse.IsValidResponse && aliasResponse.Aliases != null && aliasResponse.Aliases.Count > 0)
             {
-                _logger.LogInformation("Elasticsearch index alias '{Alias}' already exists. Skipping index creation.", _indexAlias);
-                return;
-            }
+                if (aliasResponse.Aliases.ContainsKey(_indexName))
+                {
+                    _logger.LogInformation(
+                        "Alias '{Alias}' already correctly points to index '{Index}'. Skipping creation.",
+                        _indexAlias, _indexName);
 
+                    return;
+                }
+                _logger.LogInformation("Alias exists but points to a different index. Will update.");
+            }
             // 2. Index exists?
             var indexExists = await _client.Indices.ExistsAsync(_indexName);
             if (!indexExists.Exists)
             {
-                // 2. Create physical index
+                // 3. Create physical index
                 var createIndexResponse = await _client.Indices.CreateAsync(_indexName, c => c
                     .Settings(s => s
                         .NumberOfShards(1)
@@ -56,28 +62,23 @@ namespace DevOpsDemo.Infrastructure.Implementation
                             )
                             .Analyzers(an => an
                                 .Custom("autocomplete_analyzer", ca => ca
+                                    .Filter(new[] { "lowercase", "edge_ngram_filter" })
                                     .Tokenizer("standard")
-                                    .Filters("lowercase", "edge_ngram_filter")
                                 )
                             )
                         )
                     )
-                    .Map<ProductEntity>(m => m
-                        .Properties(ps => ps
-
+                    .Mappings(m => m
+                        .Properties<ProductEntity>(ps => ps
                             // ID
-                            .Keyword(k => k
-                                .Name(p => p.Id)
-                            )
+                            .Keyword(p => p.Id)
 
-                            // Name: full text + keyword + autocomplete
-                            .Text(t => t
-                                .Name(p => p.Name)
+                            // Name: full text + keyword + autocomplete  
+                            .Text(p => p.Name, t => t
                                 .Analyzer("standard")
                                 .Fields(f => f
-                                    .Keyword(k => k.Name("keyword"))
-                                    .Text(tt => tt
-                                        .Name("autocomplete")
+                                    .Keyword("keyword")
+                                    .Text("autocomplete", tt => tt
                                         .Analyzer("autocomplete_analyzer")
                                         .SearchAnalyzer("standard")
                                     )
@@ -85,31 +86,23 @@ namespace DevOpsDemo.Infrastructure.Implementation
                             )
 
                             // Description: full text
-                            .Text(t => t
-                                .Name(p => p.Description)
+                            .Text(p => p.Description, t => t
                                 .Analyzer("standard")
                             )
 
                             // Category: filterable + sortable
-                            .Keyword(k => k
-                                .Name(p => p.Category)
-                            )
+                            .Keyword(p => p.Category)
 
                             // Price: numeric filtering/sorting
-                            .Number(n => n
-                                .Name(p => p.Price)
-                                .Type(NumberType.Double)
-                            )
+                            .IntegerNumber(p => p.Price)
 
                             // CreatedAt: sorting
-                            .Date(d => d
-                                .Name(p => p.CreatedAt)
-                            )
+                            .Date(p => p.CreatedAt)
                         )
                     )
                 );
 
-                if (!createIndexResponse.IsValid)
+                if (!createIndexResponse.IsValidResponse)
                     throw new Exception(createIndexResponse.DebugInformation);
 
                 _logger.LogInformation($"Elasticsearch index '{_indexName}' created.");
@@ -117,11 +110,15 @@ namespace DevOpsDemo.Infrastructure.Implementation
 
             _logger.LogInformation($"Creating alias '{_indexAlias}'.");
 
-            // 3. Create alias
-            var aliasResponse = await _client.Indices.PutAliasAsync(_indexName, _indexAlias);
+            // 4. Create alias
+            var updateAliasResponse = await _client.Indices.UpdateAliasesAsync(a => a
+                .Actions(actions => actions
+                    .Add(add => add.Index(_indexName).Alias(_indexAlias))
+                )
+            );
 
-            if (!aliasResponse.IsValid)
-                throw new Exception(aliasResponse.DebugInformation);
+            if (!updateAliasResponse.IsValidResponse)
+                throw new Exception(updateAliasResponse.DebugInformation);
 
             _logger.LogInformation($"Elasticsearch index alias '{_indexAlias}' created.");
         }
@@ -130,13 +127,13 @@ namespace DevOpsDemo.Infrastructure.Implementation
         {
             if (product == null) throw new ArgumentNullException(nameof(product));
             var resp = await _client.IndexAsync(product, i => i.Index(_indexAlias).Id(product.Id));
-            if (!resp.IsValid)
+            if (!resp.IsValidResponse)
                 throw new Exception($"Failed to index document id={product.Id}: {resp.DebugInformation}");
         }
 
         public async Task<long> CountAsync()
         {
-            var resp = await _client.CountAsync<ProductEntity>(c => c.Index(_indexAlias));
+            var resp = await _client.CountAsync<ProductEntity>(c => c.Indices(_indexAlias));
             return resp.Count;
         }
 
@@ -193,12 +190,13 @@ namespace DevOpsDemo.Infrastructure.Implementation
 
             var response = await _client.DeleteAsync<ProductEntity>(id, d => d.Index(_indexAlias), cancellationToken);
 
-            _logger.LogInformation("ES delete response for Id={Id}. Found={Found}, Result={Result}, Valid={Valid}",
-            id, response.Result, response.ApiCall?.HttpStatusCode, response.IsValid);
+            _logger.LogInformation("ES delete response for Id={Id}. Result={Result}, StatusCode={Status}, Valid={Valid}",
+            id, response.Result, response.ApiCallDetails?.HttpStatusCode, response.IsValidResponse);
 
-            if (!response.IsValid)
+            if (!response.IsValidResponse)
             {
-                _logger.LogError(response.OriginalException, "ES delete failed for Id={Id}", id);
+                response.TryGetOriginalException(out var ex);
+                _logger.LogError(ex, "ES delete failed for Id={Id}", id);
                 throw new Exception($"Failed to delete document id={id}: {response.DebugInformation}");
             }
         }

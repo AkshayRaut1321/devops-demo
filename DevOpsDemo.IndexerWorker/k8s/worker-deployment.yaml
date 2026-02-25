@@ -15,44 +15,63 @@ spec:
     spec:
       containers:
         - name: indexer-worker
-          image: devopsdemoakshayacr.azurecr.io/devops-demo-indexer:REPLACE_IMAGE_TAG
+          image: devopsdemoakshayacr.azurecr.io/devops-demo-indexer:cloud-test
           imagePullPolicy: IfNotPresent
           env:
-            - name: MONGO_CONNECTION_STRING
+            - name: MongoDbIndexer__ConnectionString
               valueFrom:
                 secretKeyRef:
                   name: project-b-secrets
-                  key: MONGO_CONNECTION_STRING
+                  key: MongoDbIndexer__ConnectionString
 
-            - name: ELASTICSEARCH_URL
+            - name: MongoDbIndexer__DatabaseName
+              value: productdb
+
+            - name: MongoDbIndexer__CollectionName
+              value: products
+
+            - name: ElasticSearchIndexer__NodeUrl
               valueFrom:
                 secretKeyRef:
                   name: project-b-secrets
-                  key: ELASTICSEARCH_URL
+                  key: ElasticSearchIndexer__NodeUrl
 
-            - name: ELASTICSEARCH_USERNAME
+            - name: ElasticSearchIndexer__Username
               valueFrom:
                 secretKeyRef:
                   name: project-b-secrets
-                  key: ELASTICSEARCH_USERNAME
+                  key: ElasticSearchIndexer__Username
 
-            - name: ELASTICSEARCH_PASSWORD
+            - name: ElasticSearchIndexer__Password
               valueFrom:
                 secretKeyRef:
                   name: project-b-secrets
-                  key: ELASTICSEARCH_PASSWORD
+                  key: ElasticSearchIndexer__Password
+                  
+            - name: ElasticSearchIndexer__CloudId
+              valueFrom:
+                secretKeyRef:
+                  name: project-b-secrets
+                  key: ElasticSearchIndexer__CloudId
 
-            - name: ELASTICSEARCH_INDEX_NAME
+            - name: ElasticSearchIndexer__IndexName
               valueFrom:
                 configMapKeyRef:
                   name: project-b-config
-                  key: ELASTICSEARCH_INDEX_NAME
+                  key: ElasticSearchIndexer__IndexName
 
-            - name: ELASTICSEARCH_ENABLE_CHANGE_STREAMS
+            - name: ElasticSearchIndexer__IndexAlias
               valueFrom:
                 configMapKeyRef:
                   name: project-b-config
-                  key: ELASTICSEARCH_ENABLE_CHANGE_STREAMS
+                  key: ElasticSearchIndexer__IndexAlias
+
+            - name: ElasticSearchIndexer__EnableChangeStreams
+              valueFrom:
+                configMapKeyRef:
+                  name: project-b-config
+                  key: ElasticSearchIndexer__EnableChangeStreams
+
 
           resources:
             requests:

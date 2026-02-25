@@ -4,12 +4,12 @@ using MongoDB.Driver;
 using DevOpsDemo.Infrastructure.DomainImplementation;
 using MongoDB.Bson;
 using MongoDB.Driver.Core.Events;
-using Nest;
 using DevOpsDemo.Infrastructure.Interfaces;
 using DevOpsDemo.Infrastructure.Implementation;
 using DevOpsDemo.Infrastructure.Entities.Config;
 using DevOpsDemo.Infrastructure.Entities.Database;
-using Elasticsearch.Net;
+using Elastic.Clients.Elasticsearch;
+using Elastic.Transport;
 
 namespace DevOpsDemo.Infrastructure;
 
@@ -61,62 +61,64 @@ public static class InfrastructureServiceExtensions
 
     public static IServiceCollection AddElasticInfrastructureServices(this IServiceCollection services, bool isDevelopment)
     {
-        services.AddSingleton<IElasticClient>(sp =>
+        services.AddSingleton(sp =>
         {
             var elasticSettings = sp.GetRequiredService<IOptions<ElasticSearchSettings>>().Value;
 
             // ADD THIS DEBUG LOGGING
             Console.WriteLine($"ENV: {Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}");
             Console.WriteLine("=== ELASTICSEARCH CONFIGURATION ===");
-            Console.WriteLine($"NodeUrl: {elasticSettings.NodeUrl}");
-            Console.WriteLine($"Username: {elasticSettings.Username}");
-            Console.WriteLine($"Password: {elasticSettings.Password}");
-            Console.WriteLine($"IndexName: {elasticSettings.IndexName}");
-            Console.WriteLine($"IndexAlias: {elasticSettings.IndexAlias}");
-            Console.WriteLine($"IndexAlias: {elasticSettings.CloudId}");
+            Console.WriteLine($"Akshay NodeUrl: {elasticSettings.NodeUrl}");
+            Console.WriteLine($"Akshay Username: {elasticSettings.Username}");
+            Console.WriteLine($"Akshay Password: {elasticSettings.Password}");
+            Console.WriteLine($"Akshay IndexName: {elasticSettings.IndexName}");
+            Console.WriteLine($"Akshay IndexAlias: {elasticSettings.IndexAlias}");
+            Console.WriteLine("About to read CloudId");
+            try
+            {
+                var cloudId = elasticSettings.CloudId;
+                Console.WriteLine($"CloudId VALUE: {cloudId}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("CloudId GETTER THREW");
+                Console.WriteLine(ex.ToString());
+            }
             Console.WriteLine("===================================");
 
-            var uri = new Uri(elasticSettings.NodeUrl);
-
-            ConnectionSettings elasticConnectionSettings;
+            ElasticsearchClientSettings elasticConnectionSettings;
+            var authentication = new BasicAuthentication(
+                elasticSettings.Username,
+                elasticSettings.Password
+            );
             if (!string.IsNullOrWhiteSpace(elasticSettings.CloudId))
             {
                 // Elastic Cloud
-                elasticConnectionSettings =
-        new ConnectionSettings(
-            new CloudConnectionPool(
-                elasticSettings.CloudId,
-                new BasicAuthenticationCredentials(
-                    elasticSettings.Username,
-                    elasticSettings.Password)));
+                elasticConnectionSettings = new ElasticsearchClientSettings(elasticSettings.CloudId, authentication);
             }
             else
             {
+                Uri uri = new Uri(elasticSettings.NodeUrl);
                 // Local Docker / self-hosted ES
-                elasticConnectionSettings =
-                    new ConnectionSettings(new Uri(elasticSettings.NodeUrl))
-                        .BasicAuthentication(
-                            elasticSettings.Username,
-                            elasticSettings.Password);
+                elasticConnectionSettings = new ElasticsearchClientSettings(uri)
+                    .Authentication(
+                        authentication
+                        )
+                    .ServerCertificateValidationCallback(CertificateValidations.AllowAll); // for self-signed certs;
 
             }
-            elasticConnectionSettings.DefaultMappingFor<ProductEntity>(m => m
-                   .IdProperty(p => p.Id)
-                   .PropertyName(p => p.Name, "name"))
+            elasticConnectionSettings
+                .DefaultMappingFor<ProductEntity>(m => m
+                   .IdProperty(p => p.Id))
                // Required additions for ES 8.x stability:
-               .DisableDirectStreaming()                      // helpful debugging
                .RequestTimeout(TimeSpan.FromSeconds(60))      // ES operations can be slow at startup
-               .PingTimeout(TimeSpan.FromSeconds(30))         // avoid premature ping failures
-               .SniffOnStartup(false)                         // disable sniffing (not needed for single-node)
-               .SniffOnConnectionFault(false)
-               .EnableApiVersioningHeader()                   // recommended for ES 8+
-               .ServerCertificateValidationCallback((o, cert, chain, errors) => true); // allow self-signed certs
+               .PingTimeout(TimeSpan.FromSeconds(30));         // avoid premature ping failures
 
-#if DEBUG
-            elasticConnectionSettings.DisableDirectStreaming();
-#endif
+            #if DEBUG
+                elasticConnectionSettings.EnableDebugMode();       // replaces DisableDirectStreaming for debugging
+            #endif
 
-            return new ElasticClient(elasticConnectionSettings);
+            return new ElasticsearchClient(elasticConnectionSettings);
         });
 
         return services;
