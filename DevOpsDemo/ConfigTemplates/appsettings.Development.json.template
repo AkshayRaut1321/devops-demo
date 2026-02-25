@@ -7,8 +7,8 @@
   },
   "MongoDbWebApi": {
     "ConnectionString": "mongodb://localhost:8001?directConnection=true",
-        "DatabaseName": "productdb",
-        "CollectionName": "products"
+    "DatabaseName": "productdb",
+    "CollectionName": "products"
   },
   "ElasticSearchWebApi": {
     "NodeUrl": "http://localhost:8002",

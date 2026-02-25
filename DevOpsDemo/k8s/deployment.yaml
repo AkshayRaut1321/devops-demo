@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: devopsdemo-deployment
+  namespace: project-a
 spec:
   replicas: 1
   selector:
@@ -37,6 +38,62 @@ spec:
           limits:
             cpu: "500m"
             memory: "512Mi"
+            
+        env:
+          - name: MongoDbWebApi__ConnectionString
+            valueFrom:
+              secretKeyRef:
+                name: project-a-secrets
+                key: MongoDbWebApi__ConnectionString
+
+          - name: MongoDbWebApi__DatabaseName
+            value: productdb
+
+          - name: MongoDbWebApi__CollectionName
+            value: products
+
+          - name: ElasticSearchWebApi__NodeUrl
+            valueFrom:
+              secretKeyRef:
+                name: project-a-secrets
+                key: ElasticSearchWebApi__NodeUrl
+
+          - name: ElasticSearchWebApi__Username
+            valueFrom:
+              secretKeyRef:
+                name: project-a-secrets
+                key: ElasticSearchWebApi__Username
+
+          - name: ElasticSearchWebApi__Password
+            valueFrom:
+              secretKeyRef:
+                name: project-a-secrets
+                key: ElasticSearchWebApi__Password
+                
+          - name: ElasticSearchWebApi__CloudId
+            valueFrom:
+              secretKeyRef:
+                name: project-a-secrets
+                key: ElasticSearchWebApi__CloudId
+
+          - name: ElasticSearchWebApi__IndexName
+            valueFrom:
+              configMapKeyRef:
+                name: project-a-config
+                key: ElasticSearchWebApi__IndexName
+
+          - name: ElasticSearchWebApi__IndexAlias
+            valueFrom:
+              configMapKeyRef:
+                name: project-a-config
+                key: ElasticSearchWebApi__IndexAlias
+
+          - name: ElasticSearchWebApi__EnableChangeStreams
+            valueFrom:
+              configMapKeyRef:
+                name: project-a-config
+                key: ElasticSearchWebApi__EnableChangeStreams
+
       imagePullSecrets:
         - name: acr-auth
 ---
@@ -44,6 +101,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: devopsdemo-service
+  namespace: project-a
   labels:
     app: devopsdemo
 spec:
