@@ -1,0 +1,14 @@
+using DevOpsDemo.Infrastructure.Entities.Database;
+
+namespace DevOpsDemo.Infrastructure.Interfaces
+{
+    public interface IElasticIndexService
+    {
+        Task EnsureIndexAsync();
+        Task IndexDocumentAsync(ProductEntity product);
+        Task<long> CountAsync();
+        Task BulkUpsertAsync(IEnumerable<ProductEntity> products, int batchSize = 500, CancellationToken cancellationToken = default);
+        // **Add this method for deletes**
+        Task DeleteAsync(string id, CancellationToken cancellationToken = default);
+    }
+}

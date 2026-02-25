@@ -1,4 +1,6 @@
 using DevOpsDemo.Application;
+using DevOpsDemo.Infrastructure.Interfaces;
+using DevOpsDemo.Infrastructure.Entities.Config;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +16,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+var mongoDbSettings = builder.Configuration.GetSection("MongoDbWebApi");
+builder.Services.Configure<MongoDbSettings>(mongoDbSettings);
+
+var elasticSearchSettings = builder.Configuration.GetSection("ElasticSearchWebApi");
+builder.Services.Configure<ElasticSearchSettings>(elasticSearchSettings);
+
 //Place to add Dependency Injection, Logger, Configurations
 builder.Services.AddApplicationServices(builder.Configuration, builder.Environment.IsDevelopment());
 builder.Services.AddTransient<DatabaseSeeder>();
@@ -22,17 +30,22 @@ var app = builder.Build();
 //Place to add Middleware.
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")
+if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")//Don't change this. Keep it for testing on Docker.
 {
     using var scope = app.Services.CreateScope();
     var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
     await seeder.SeedAsync();
 
+    // var elasticIndexService = scope.ServiceProvider.GetRequiredService<IElasticIndexService>();
+    // await seeder.SeedElasticAsync(elasticIndexService);
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
+if (!app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
 
 // ✅ Map controller routes
 app.MapControllers();

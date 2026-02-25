@@ -1,7 +1,6 @@
-
 using AutoMapper;
 using DevOpsDemo.Domain.Models;
-using DevOpsDemo.Infrastructure.Entities;
+using DevOpsDemo.Infrastructure.Entities.Database;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
@@ -15,7 +14,7 @@ namespace DevOpsDemo.Infrastructure.DomainImplementation
 
         public ProductRepository(IMongoDatabase database, IMapper mapper)
         {
-            _collection = database.GetCollection<ProductEntity>("Products");
+            _collection = database.GetCollection<ProductEntity>("products");
             _mapper = mapper;
             EnsureIndexes();
         }

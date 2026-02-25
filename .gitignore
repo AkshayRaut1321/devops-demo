@@ -75,3 +75,6 @@ _ReSharper*/
 # Others
 *.swp
 *.*~
+
+#Elastic Search
+.env.elasticsearch

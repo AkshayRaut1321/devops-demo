@@ -1,0 +1,46 @@
+version: "3.8"
+services:
+  mongo:
+    image: mongo:6.0
+    ports:
+      - "8001:27017"
+    command: ["mongod", "--replSet", "rs0"]
+    volumes:
+      - replica-mongo-data:/data/db
+    healthcheck:
+      test: |
+        mongosh --quiet --eval "
+          try {
+            var status = rs.status();
+            if (status.ok === 1) {
+              print('Replica set already initialized');
+              quit(0);
+            }
+          } catch(e) {
+            if (e.codeName === 'NotYetInitialized') {
+              print('Initializing replica set...');
+              var result = rs.initiate({
+                _id: 'rs0',
+                members: [{ _id: 0, host: 'mongo:27017' }]
+              });
+              if (result.ok === 1) {
+                print('Replica set initialized successfully');
+                quit(0);
+              } else {
+                print('Failed to initialize replica set');
+                quit(1);
+              }
+            }
+            print('Unknown error: ' + e.message);
+            quit(1);
+          }
+        " || exit 1
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+    environment:
+      - MONGO_INITDB_DATABASE=admin
+
+volumes:
+  replica-mongo-data:
