@@ -20,7 +20,6 @@ COPY DevOpsDemo/ ./DevOpsDemo/
 COPY DevOpsDemo.Application/ ./DevOpsDemo.Application/
 COPY DevOpsDemo.Domain/ ./DevOpsDemo.Domain/
 COPY DevOpsDemo.Infrastructure/ ./DevOpsDemo.Infrastructure/
-COPY DevOpsDemo.IndexerWorker/ ./DevOpsDemo.IndexerWorker/
 
 # Publish API project
 WORKDIR /src/DevOpsDemo
