@@ -1,0 +1,85 @@
+name: WEB API CI-CD Pipeline
+
+# 1. Trigger
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  # You can add 'workflow_dispatch:' if you want manual trigger too.
+  workflow_dispatch:
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 2. Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 3. Setup .NET SDK
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'   # change if using 7.0 or other version
+
+      # 4. Run tests (restore → build → test)
+      - name: Restore dependencies
+        run: dotnet restore DevOpsDemo.sln
+
+      - name: Build
+        run: dotnet build DevOpsDemo.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test DevOpsDemo.Tests/DevOpsDemo.Tests.csproj --verbosity normal
+
+      # 5. Azure Login with Service Principal
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # 6. Login to ACR
+      - name: Login to ACR
+        run: az acr login --name devopsdemoakshayacr  # replace with your secret if needed
+
+      # 7. Build & Push Docker Image to ACR
+      - name: Set image tag
+        run: echo "IMAGE_TAG=${GITHUB_SHA}" >> $GITHUB_ENV
+
+      - name: Docker build & push
+        run: |
+          FULL_IMAGE=devopsdemoakshayacr.azurecr.io/devops-demo:${IMAGE_TAG}
+          echo "Building $FULL_IMAGE"
+          docker build -t $FULL_IMAGE -f DevOpsDemo/Dockerfile DevOpsDemo
+          echo "Pushing $FULL_IMAGE"
+          docker push $FULL_IMAGE
+          echo "FULL_IMAGE=$FULL_IMAGE" >> $GITHUB_ENV
+
+      # 8. Get AKS Credentials
+      - name: Get AKS credentials
+        run: az aks get-credentials -g DevOpsDemoRG -n DevOpsDemoAKSCluster --overwrite-existing
+
+      # 9. Replace Image Tag in Manifest
+      - name: Replace image tag
+        run: |
+          sed -i "s|REPLACE_IMAGE_TAG|${IMAGE_TAG}|g" DevOpsDemo/k8s/deployment.yaml
+
+      # 10. Deploy to AKS
+      - name: Deploy to AKS
+        run: |
+          kubectl apply -f DevOpsDemo/k8s/deployment.yaml
+          kubectl rollout status deployment/devopsdemo-deployment -n project-a --timeout=120s
+
+      # 11. Print Public Endpoint
+      - name: Get Service External IP
+        run: |
+          echo "Waiting for LoadBalancer IP..."
+          sleep 30
+          kubectl get svc devopsdemo-service -n project-a
+          EXTERNAL_IP=$(kubectl get svc devopsdemo-service -n project-a -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "Application URL:"
+          echo "http://$EXTERNAL_IP/hello"

@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ---------------------------
+# Required environment variables (CI will set via GitHub Secrets)
+# ---------------------------
+: "${AZURE_CLIENT_ID:?}"
+: "${AZURE_CLIENT_SECRET:?}"
+: "${AZURE_TENANT_ID:?}"
+: "${SUBSCRIPTION_ID:?}"
+: "${ACR_NAME:?}"
+: "${ACR_LOGIN_SERVER:?}"
+: "${AKS_RG:?}"
+: "${AKS_NAME:?}"
+: "${IMAGE_NAME:?}"
+: "${IMAGE_TAG:?}"
+
+# ---------------------------
+# Optional defaults
+# ---------------------------
+DOCKERFILE_PATH="${DOCKERFILE_PATH:-DevOpsDemo.Indexer/Dockerfile}"  # where Dockerfile lives
+BUILD_CONTEXT="${BUILD_CONTEXT:-DevOpsDemo.Indexer}"                 # context = project folder
+K8S_DIR="${K8S_DIR:-DevOpsDemo.Indexer/k8s}"                         # folder with deployment.yaml
+DEPLOYMENT_NAME="${DEPLOYMENT_NAME:-indexer-worker}"
+NAMESPACE="${NAMESPACE:-project-b}"
+CONTAINER_NAME="${CONTAINER_NAME:-indexer-worker}"
+
+# ---------------------------
+# Azure Login
+# ---------------------------
+echo "🔑 Logging into Azure..."
+az login --service-principal \
+  -u "$AZURE_CLIENT_ID" \
+  -p "$AZURE_CLIENT_SECRET" \
+  --tenant "$AZURE_TENANT_ID" >/dev/null
+
+az account set --subscription "$SUBSCRIPTION_ID"
+
+# ---------------------------
+# Build & Push Docker Image
+# ---------------------------
+FULL_IMAGE="${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}"
+
+echo "🐳 Building Docker image: $FULL_IMAGE"
+docker build -f "$DOCKERFILE_PATH" -t "$FULL_IMAGE" "$BUILD_CONTEXT"
+
+# az acr login --name "$ACR_NAME"
+echo "📤 Logging in to ACR with service principal..."
+echo "$AZURE_CLIENT_SECRET" | docker login "$ACR_LOGIN_SERVER" \
+  --username "$AZURE_CLIENT_ID" \
+  --password-stdin
+
+echo "📤 Pushing image: $FULL_IMAGE"
+docker push "$FULL_IMAGE"
+
+# ---------------------------
+# Deploy to AKS
+# ---------------------------
+echo "☸️ Getting AKS credentials..."
+az aks get-credentials -g "$AKS_RG" -n "$AKS_NAME" --overwrite-existing
+
+echo "🧩 Updating Kubernetes manifests..."
+tmpdir="$(mktemp -d)"
+cp -r "$K8S_DIR"/. "$tmpdir"/
+
+# Replace REPLACE_IMAGE_TAG in worker-deployment.yaml with actual IMAGE_TAG
+sed -i "s|REPLACE_IMAGE_TAG|${IMAGE_TAG}|g" "$tmpdir/worker-deployment.yaml"
+
+kubectl apply -f "$tmpdir"
+
+echo "⏳ Waiting for rollout..."
+kubectl rollout status deployment/"$DEPLOYMENT_NAME" -n "$NAMESPACE" --timeout=300s
+
+echo "✅ Indexer deployment successful. Current pods:"
+kubectl get pods -n "$NAMESPACE" -l app="$CONTAINER_NAME" -o wide

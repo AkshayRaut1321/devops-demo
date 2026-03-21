@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: indexer-worker
-          image: devopsdemoakshayacr.azurecr.io/devops-demo-indexer:cloud-test
+          image: devopsdemoakshayacr.azurecr.io/devops-demo-indexer:REPLACE_IMAGE_TAG
           imagePullPolicy: IfNotPresent
           env:
             - name: MongoDbIndexer__ConnectionString
