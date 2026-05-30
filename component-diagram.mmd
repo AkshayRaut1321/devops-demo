@@ -1,0 +1,66 @@
+flowchart TB
+  subgraph API["DevOpsDemo API"]
+    A[Program.cs]
+    B[ProductsController]
+    C[ProductService]
+    D[ProductAndDiscountService]
+    E[ProductSearchService]
+    F[SalesService]
+  end
+
+  subgraph Application["DevOpsDemo.Application"]
+    C
+    D
+    E
+    F
+  end
+
+  subgraph Infrastructure["DevOpsDemo.Infrastructure"]
+    G[ElasticIndexService]
+    H[ProductRepository]
+    I[ProductAndDiscountRepository]
+    J[SalesRepository]
+    K[MongoClient / Database]
+  end
+
+  subgraph MongoDB["MongoDB"]
+    M[products]
+    N[sales]
+    O[discounts]
+    P[search_sync_checkpoints]
+  end
+
+  subgraph Elasticsearch["Elasticsearch"]
+    Q[products_current alias]
+  end
+
+  subgraph Worker["DevOpsDemo.IndexerWorker"]
+    W1[ElasticBootstrapService]
+    W2[FullReindexWorker]
+    W3[ChangeStreamWorker]
+  end
+
+  A --> B
+  B --> C
+  B --> D
+  B --> E
+  B --> F
+  C --> H
+  D --> I
+  F --> J
+  E --> Q
+  H --> M
+  I --> M
+  I --> O
+  J --> N
+  W1 --> G
+  W2 --> G
+  W2 --> H
+  W3 --> H
+  W3 --> G
+  W3 --> P
+  G --> Q
+  K --> M
+  K --> N
+  K --> O
+  K --> P

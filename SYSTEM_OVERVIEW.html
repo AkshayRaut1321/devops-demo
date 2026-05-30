@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevOpsDemo System Overview</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 1.5rem; background: #f9f9f9; color: #222; }
+    h1 { margin-bottom: 0.5rem; }
+    .diagram-container { background: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 0 14px rgba(0,0,0,.08); }
+    .notice { margin-bottom: 1rem; color: #555; }
+  </style>
+</head>
+<body>
+  <h1>DevOpsDemo Component Diagram</h1>
+  <div class="notice">If the diagram does not render automatically, refresh the page. Mermaid is loaded from CDN.</div>
+  <div class="diagram-container">
+    <div class="mermaid">
+flowchart TB
+  subgraph API["DevOpsDemo API"]
+    A[Program.cs]
+    B[ProductsController]
+    C[ProductService]
+    D[ProductAndDiscountService]
+    E[ProductSearchService]
+    F[SalesService]
+  end
+
+  subgraph Application["DevOpsDemo.Application"]
+    C
+    D
+    E
+    F
+  end
+
+  subgraph Infrastructure["DevOpsDemo.Infrastructure"]
+    G[ElasticIndexService]
+    H[ProductRepository]
+    I[ProductAndDiscountRepository]
+    J[SalesRepository]
+    K[MongoClient / Database]
+  end
+
+  subgraph MongoDB["MongoDB"]
+    M[products]
+    N[sales]
+    O[discounts]
+    P[search_sync_checkpoints]
+  end
+
+  subgraph Elasticsearch["Elasticsearch"]
+    Q[products_current alias]
+  end
+
+  subgraph Worker["DevOpsDemo.IndexerWorker"]
+    W1[ElasticBootstrapService]
+    W2[FullReindexWorker]
+    W3[ChangeStreamWorker]
+  end
+
+  A --> B
+  B --> C
+  B --> D
+  B --> E
+  B --> F
+  C --> H
+  D --> I
+  F --> J
+  E --> Q
+  H --> M
+  I --> M
+  I --> O
+  J --> N
+  W1 --> G
+  W2 --> G
+  W2 --> H
+  W3 --> H
+  W3 --> G
+  W3 --> P
+  G --> Q
+  K --> M
+  K --> N
+  K --> O
+  K --> P
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+</body>
+</html>
