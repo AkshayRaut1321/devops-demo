@@ -22,6 +22,7 @@ DOCKERFILE_PATH="${DOCKERFILE_PATH:-DevOpsDemo/Dockerfile}"  # where Dockerfile 
 BUILD_CONTEXT="${BUILD_CONTEXT:-DevOpsDemo}"                 # context = project folder
 K8S_DIR="${K8S_DIR:-DevOpsDemo/k8s}"                         # folder with deployment.yaml
 DEPLOYMENT_NAME="${DEPLOYMENT_NAME:-devopsdemo-deployment}"
+NAMESPACE="${NAMESPACE:-project-a}"
 CONTAINER_NAME="${CONTAINER_NAME:-devopsdemo}"
 
 # ---------------------------
@@ -68,7 +69,7 @@ sed -i "s|REPLACE_IMAGE_TAG|${IMAGE_TAG}|g" "$tmpdir/deployment.yaml"
 kubectl apply -f "$tmpdir"
 
 echo "⏳ Waiting for rollout..."
-kubectl rollout status deployment/"$DEPLOYMENT_NAME" --timeout=300s
+kubectl rollout status deployment/"$DEPLOYMENT_NAME" -n "$NAMESPACE" --timeout=300s
 
-echo "✅ Deployment successful. Current pods:"
-kubectl get pods -l app="$CONTAINER_NAME" -o wide
+echo "✅ API Deployment successful. Current pods:"
+kubectl get pods -n "$NAMESPACE" -l app="$CONTAINER_NAME" -o wide

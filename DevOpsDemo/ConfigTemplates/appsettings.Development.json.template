@@ -1,0 +1,21 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "MongoDbWebApi": {
+    "ConnectionString": "mongodb://localhost:8001?directConnection=true",
+    "DatabaseName": "productdb",
+    "CollectionName": "products"
+  },
+  "ElasticSearchWebApi": {
+    "NodeUrl": "http://localhost:8002",
+    "IndexName": "products_v1",
+    "IndexAlias": "products_current",
+    "Username": "elastic",
+    "Password": "elastic123",
+    "CloudId": ""
+  }
+}

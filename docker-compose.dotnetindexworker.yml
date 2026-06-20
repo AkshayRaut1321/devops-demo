@@ -1,0 +1,20 @@
+version: "3.8"
+services:
+  indexer-worker:
+    build:
+      context: .
+      dockerfile: DevOpsDemo.IndexerWorker/Dockerfile
+    container_name: devops-demo-indexer-worker
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+    environment:
+      DOTNET_ENVIRONMENT: "Docker"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped

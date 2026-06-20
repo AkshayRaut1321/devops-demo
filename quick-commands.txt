@@ -1,0 +1,85 @@
+Quick commands for executing every time practice starts or resumes
+
+Create Azure Kubernetes Service cluster (MANDATORY)
+If you need monitoring then run this twice because you may encounter error on first try:
+az aks create --resource-group DevOpsDemoRG --name DevOpsDemoAKSCluster --node-count 1 --enable-addons monitoring --generate-ssh-keys
+
+OR you can skip the monitoring so remove that:
+az aks create --resource-group DevOpsDemoRG --name DevOpsDemoAKSCluster --node-count 1 --generate-ssh-keys
+
+Create Azure Container Registry for Docker images (MANDATORY)
+az acr create --resource-group DevOpsDemoRG --name devopsdemoakshayacr --sku Basic
+
+Refresh credentials on local (MANDATORY)
+You must run it especially if you deleted and re-created the AKS cluster with same name.
+AKS resource must exist before running this command.
+az aks get-credentials -g DevOpsDemoRG -n DevOpsDemoAKSCluster --overwrite-existing
+
+Create a new Service Principal with access to your ACR for AcrPull role.
+Note: Wait 5-10 mins before running the GitHub Actions workflow for RBAC changes to take effect.
+az ad sp create-for-rbac --name "devopsdemo-acr-sp" --role acrpull --scopes /subscriptions/2d1cf157-c5f9-45ba-a00a-02c5c888f741/resourceGroups/DevOpsDemoRG/providers/Microsoft.ContainerRegistry/registries/devopsdemoakshayacr --sdk-auth
+
+Assign AcrPull permission to your existing ACR resource for the existing Service Principal.
+Note: Wait 5-10 mins before running the GitHub Actions workflow for RBAC changes to take effect.
+Format: az role assignment create --assignee <APP_ID_OF_SERVICE_PRINCIPAL> --role AcrPull --scope <ACR_ID>
+Final Command: az role assignment create --assignee 1e221755-bb87-4b69-a0ab-934ac5bd3812 --role AcrPull --scope /subscriptions/2d1cf157-c5f9-45ba-a00a-02c5c888f741/resourceGroups/DevOpsDemoRG/providers/Microsoft.ContainerRegistry/registries/devopsdemoakshayacr
+
+Output (sample):
+Merged "DevOpsDemoAKSCluster" as current context in C:\Users\raksh\.kube\config
+
+Check active pods
+Note: Make sure you have logged in using az login command.
+kubectl get pods
+Output:
+NAME                                     READY   STATUS    RESTARTS   AGE
+devopsdemo-deployment-7698759649-x5g4s   1/1     Running   0          15m
+
+Check external URL of your app
+kubectl get service devopsdemo-service -o wide
+Output:
+NAME                 TYPE           CLUSTER-IP    EXTERNAL-IP     PORT(S)        AGE   SELECTOR
+devopsdemo-service   LoadBalancer   10.0.83.121   172.212.53.78   80:30395/TCP   36m   app=devopsdemo
+“devopsdemo-service” is taken from your repo’s service.yaml file or the service section of your deployment.yaml file. It’s whatever you mention.
+
+Run once
+Command prompt version:
+az ad sp create-for-rbac --name "devopsdemo-acr-sp" --role acrpull --scopes /subscriptions/2d1cf157-c5f9-45ba-a00a-02c5c888f741/resourceGroups/DevOpsDemoRG/providers/Microsoft.ContainerRegistry/registries/devopsdemoakshayacr --sdk-auth
+
+Rerunnable for .NET background service - Indexer Worker
+Attach the AKS with ACR
+az aks update --name DevOpsDemoAKSCluster --resource-group DevOpsDemoRG --attach-acr devopsdemoakshayacr
+
+Choose a Kubernetes namespace
+Create a namespace (if not exists):
+kubectl create namespace project-b
+Verify:
+kubectl get namespaces
+
+Create Secrets in Kubernetes namespace created above
+Don’t touch the red highlighted portion because as per ChatGPT, the .NET app needs to know the database name while connecting, unlike MongoDB Compass.
+kubectl create secret generic project-b-secrets --namespace project-b --from-literal=MongoDbIndexer__ConnectionString="mongodb+srv://[DB_USERNAME]:[DB_PASSWORD]@cluster0.bpkshl.mongodb.net/productdb?retryWrites=true&w=majority" --from-literal=ElasticSearchIndexer__NodeUrl="https://2cd0c98ce00c4fbb8335e363871e874c.centralindia.azure.elastic-cloud.com:443" --from-literal=ElasticSearchIndexer__Username="elastic"   --from-literal=ElasticSearchIndexer__Password="733hfVPhzHDn8HkDIwsuz9tt"
+
+Create Config in Kubernetes namespace created above
+kubectl create configmap project-b-config --namespace project-b  --from-literal=ElasticSearchIndexer__IndexName="products_v1" --from-literal=ElasticSearchIndexer__IndexAlias="products_current" --from-literal=ElasticSearchIndexer__EnableChangeStreams="true"
+
+Build image of Background service with docker
+Ensure that Docker Desktop is running.
+docker build -t devopsdemoakshayacr.azurecr.io/devops-demo-indexer:cloud-test -f DevOpsDemo.IndexerWorker/Dockerfile .
+Authenticate yourself for ACR in terminal before Docker can push the image to ACR
+
+az acr login --name devopsdemoakshayacr
+
+Push the built image to Azure ACR
+docker push devopsdemoakshayacr.azurecr.io/devops-demo-indexer:cloud-test
+verify:
+az acr repository list --name devopsdemoakshayacr -o table
+
+kubectl apply -f DevOpsDemo.IndexerWorker/k8s/worker-deployment.yaml
+
+kubectl get pods -n project-b
+
+kubectl logs -n project-b deployment/indexer-worker
+
+Restart the deployment
+After attaching ACR:
+kubectl rollout restart deployment indexer-worker -n project-b

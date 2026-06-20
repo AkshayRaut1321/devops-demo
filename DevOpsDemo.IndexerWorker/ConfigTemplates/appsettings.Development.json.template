@@ -1,0 +1,35 @@
+{
+  "MongoDbIndexer": {
+    "ConnectionString": "mongodb://localhost:8001/?directConnection=true",
+    "DatabaseName": "productsDb",
+    "CollectionName": "products"
+  },
+  "ElasticSearchIndexer": {
+    "NodeUrl": "http://localhost:8002",
+    "IndexName": "products",
+    "IndexAlias": "products_current",
+    "Username": "elastic",
+    "Password": "elastic123",
+    "CloudId": ""
+  },
+  "WorkerIndexer": {
+    "RetryDelaySeconds": 5,
+    "EnableChangeStream": true,
+    "EnableFullResyncOnStart": false,
+    "BatchSize": 100,
+    "CheckpointCollection": "search_sync_checkpoints",
+    "DeadLetterCollection": "search_sync_deadletters",
+    "FullReindexOnStartup": true,
+    "FullReindexIntervalMinutes": 1440,
+    "ChangeStreamEnabled": true,
+    "ChangeStreamRetrySeconds": 10
+  },
+  "Serilog": {
+    "MinimumLevel": "Information",
+    "WriteTo": [
+      {
+        "Name": "Console"
+      }
+    ]
+  }
+}

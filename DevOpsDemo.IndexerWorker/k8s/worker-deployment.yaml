@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: indexer-worker
+  namespace: project-b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: indexer-worker
+  template:
+    metadata:
+      labels:
+        app: indexer-worker
+    spec:
+      containers:
+        - name: indexer-worker
+          image: devopsdemoakshayacr.azurecr.io/devops-demo-indexer:REPLACE_IMAGE_TAG
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MongoDbIndexer__ConnectionString
+              valueFrom:
+                secretKeyRef:
+                  name: project-b-secrets
+                  key: MongoDbIndexer__ConnectionString
+
+            - name: MongoDbIndexer__DatabaseName
+              value: productdb
+
+            - name: MongoDbIndexer__CollectionName
+              value: products
+
+            - name: ElasticSearchIndexer__NodeUrl
+              valueFrom:
+                secretKeyRef:
+                  name: project-b-secrets
+                  key: ElasticSearchIndexer__NodeUrl
+
+            - name: ElasticSearchIndexer__Username
+              valueFrom:
+                secretKeyRef:
+                  name: project-b-secrets
+                  key: ElasticSearchIndexer__Username
+
+            - name: ElasticSearchIndexer__Password
+              valueFrom:
+                secretKeyRef:
+                  name: project-b-secrets
+                  key: ElasticSearchIndexer__Password
+                  
+            - name: ElasticSearchIndexer__CloudId
+              valueFrom:
+                secretKeyRef:
+                  name: project-b-secrets
+                  key: ElasticSearchIndexer__CloudId
+
+            - name: ElasticSearchIndexer__IndexName
+              valueFrom:
+                configMapKeyRef:
+                  name: project-b-config
+                  key: ElasticSearchIndexer__IndexName
+
+            - name: ElasticSearchIndexer__IndexAlias
+              valueFrom:
+                configMapKeyRef:
+                  name: project-b-config
+                  key: ElasticSearchIndexer__IndexAlias
+
+            - name: ElasticSearchIndexer__EnableChangeStreams
+              valueFrom:
+                configMapKeyRef:
+                  name: project-b-config
+                  key: ElasticSearchIndexer__EnableChangeStreams
+
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
