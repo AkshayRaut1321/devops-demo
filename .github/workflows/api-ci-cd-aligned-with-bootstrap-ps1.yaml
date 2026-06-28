@@ -52,7 +52,7 @@ jobs:
 
       - name: Docker build & push
         run: |
-          FULL_IMAGE=devopsdemoakshayacr.azurecr.io/devops-demo:${IMAGE_TAG}
+          FULL_IMAGE=devopsdemoakshayacr.azurecr.io/devops-demo-api:${IMAGE_TAG}
           echo "Building $FULL_IMAGE"
           docker build -t $FULL_IMAGE -f DevOpsDemo/Dockerfile DevOpsDemo
           echo "Pushing $FULL_IMAGE"

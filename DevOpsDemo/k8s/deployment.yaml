@@ -4,7 +4,7 @@ metadata:
   name: devopsdemo-deployment
   namespace: project-a
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: devopsdemo
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: devopsdemo
-        image: devopsdemoakshayacr.azurecr.io/devops-demo:REPLACE_IMAGE_TAG
+        image: devopsdemoakshayacr.azurecr.io/devops-demo-api:cloud-test
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
